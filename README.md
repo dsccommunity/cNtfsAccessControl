@@ -25,15 +25,15 @@ The **cNtfsAccessControl** module contains the **cNtfsPermissionEntry** DSC reso
     - `FilesOnly`
   * **NoPropagateInherit**: Only apply these permissions to objects and/or containers within this container. This property is only valid when the **ItemType** property is set to `Directory`.
 
-> **Note:** \
-> If the **Ensure** property is set to `Present` and the **PermissionEntry** property is not specified, the default permission entry will be used as the reference entry. \
+> **Note:**
+> If the **Ensure** property is set to `Present` and the **PermissionEntry** property is not specified, the default permission entry will be used as the reference entry.
 Default permission entry: "Allow | Read & Execute | This folder, subfolders and files (Directory) / None (File)".
 
-> **Note:** \
+> **Note:**
 > If the **Ensure** property is set to `Absent`, the **PermissionEntry** property will be ignored.
 
-> **Note:** \
-> If you want to assign multiple permission entries for a principal, it is strongly recommended to test them in advance to make sure they are not merging. \
+> **Note:**
+> If you want to assign multiple permission entries for a principal, it is strongly recommended to test them in advance to make sure they are not merging.
 In such cases the **Test-TargetResource** function will always return `$false` (i.e. resource is not in the desired state), and permissions will be reapplied every time DSC Consistency Check is executed.
 
 ## Versions
