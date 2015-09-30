@@ -21,7 +21,7 @@ configuration Sample_cNtfsPermissionEntry
     }
 
     # EXAMPLE 1: Add a single permission entry for a principal.
-    # NOTE: If you do not specify the PermissionEntry property, the default permission entry will be used as the reference entry.
+    # NOTE: If you do not specify the AccessControlInformation property, the default permission entry will be used as the reference entry.
     cNtfsPermissionEntry PermissionEntry1
     {
         Ensure = 'Present'
@@ -38,7 +38,7 @@ configuration Sample_cNtfsPermissionEntry
         Path = 'C:\TestDirectory\TestFile.txt'
         ItemType = 'File'
         Principal = 'BUILTIN\Users'
-        PermissionEntry =
+        AccessControlInformation =
         @(
             cNtfsAccessControlInformation
             {
@@ -56,7 +56,7 @@ configuration Sample_cNtfsPermissionEntry
         Path = 'C:\TestDirectory'
         ItemType = 'Directory'
         Principal = 'BUILTIN\Administrators'
-        PermissionEntry =
+        AccessControlInformation =
         @(
             cNtfsAccessControlInformation
             {
@@ -75,7 +75,7 @@ configuration Sample_cNtfsPermissionEntry
             cNtfsAccessControlInformation
             {
                 AccessControlType = 'Allow'
-                FileSystemRights = 'AppendData, CreateFiles'
+                FileSystemRights = 'AppendData', 'CreateFiles'
                 Inheritance = 'SubfoldersAndFilesOnly'
                 NoPropagateInherit = $false
             }
@@ -84,7 +84,7 @@ configuration Sample_cNtfsPermissionEntry
     }
 
     # EXAMPLE 4: Remove all of the non-inherited permission entries for a principal.
-    # NOTE: In case the PermissionEntry property is specified, it will be ignored.
+    # NOTE: In case the AccessControlInformation property is specified, it will be ignored.
     cNtfsPermissionEntry PermissionEntry4
     {
         Ensure = 'Absent'
