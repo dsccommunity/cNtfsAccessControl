@@ -96,9 +96,9 @@ configuration Sample_cNtfsPermissionEntry
 
 }
 
-Sample_cNtfsPermissionEntry -OutputPath $Env:Temp
+Sample_cNtfsPermissionEntry -OutputPath "$Env:SystemDrive\Sample_cNtfsPermissionEntry"
 
-Start-DscConfiguration -Path $Env:Temp -Force -Verbose -Wait
+Start-DscConfiguration -Path "$Env:SystemDrive\Sample_cNtfsPermissionEntry" -Force -Verbose -Wait
 
 Get-DscConfiguration
 

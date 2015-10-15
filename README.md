@@ -2,6 +2,8 @@
 
 The **cNtfsAccessControl** module contains the **cNtfsPermissionEntry** DSC resource that provides a mechanism to manage NTFS permission entries.
 
+You can also download this module from the [PowerShell Gallery](https://www.powershellgallery.com/packages/cNtfsAccessControl/).
+
 ## Resources
 
 ### cNtfsPermissionEntry
@@ -38,6 +40,10 @@ In such cases the **Test-TargetResource** function will always return `$false` (
 
 ## Versions
 
+### 1.1.1 (October 15, 2015)
+
+* Minor update.
+
 ### 1.1.0 (September 30, 2015)
 
 * The **PermissionEntry** property was renamed to **AccessControlInformation**.
@@ -45,7 +51,7 @@ In such cases the **Test-TargetResource** function will always return `$false` (
 ### 1.0.0 (September 29, 2015)
 
 * Initial release with the following resources:
-  - **cNtfsPermissionEntry**
+  - **cNtfsPermissionEntry**.
 
 ## Examples
 
@@ -150,9 +156,9 @@ configuration Sample_cNtfsPermissionEntry
 
 }
 
-Sample_cNtfsPermissionEntry -OutputPath $Env:Temp
+Sample_cNtfsPermissionEntry -OutputPath "$Env:SystemDrive\Sample_cNtfsPermissionEntry"
 
-Start-DscConfiguration -Path $Env:Temp -Force -Verbose -Wait
+Start-DscConfiguration -Path "$Env:SystemDrive\Sample_cNtfsPermissionEntry" -Force -Verbose -Wait
 
 Get-DscConfiguration
 
