@@ -1,4 +1,4 @@
-﻿
+
 configuration Sample_cNtfsPermissionEntry
 {
     Import-DscResource -ModuleName PSDesiredStateConfiguration
@@ -93,7 +93,6 @@ configuration Sample_cNtfsPermissionEntry
         Principal = 'BUILTIN\Users'
         DependsOn = '[File]TestDirectory'
     }
-
 }
 
 Sample_cNtfsPermissionEntry -OutputPath "$Env:SystemDrive\Sample_cNtfsPermissionEntry"

@@ -1,0 +1,9 @@
+
+[ClassVersion("1.0.0.0"), FriendlyName("cNtfsPermissionsInheritance")]
+class cNtfsPermissionsInheritance : OMI_BaseResource
+{
+    [Key, Description("Indicates the path to the target item.")] String Path;
+    [Required, Description("Indicates whether permissions inheritance is enabled.")] Boolean Enabled;
+    [Write, Description("Indicates whether to preserve inherited permissions.")] Boolean PreserveInherited;
+};
+

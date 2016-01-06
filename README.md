@@ -1,6 +1,6 @@
 # cNtfsAccessControl
 
-The **cNtfsAccessControl** module contains the **cNtfsPermissionEntry** DSC resource that provides a mechanism to manage NTFS permission entries.
+The **cNtfsAccessControl** module contains DSC Resources for NTFS Access Control Management.
 
 You can also download this module from the [PowerShell Gallery](https://www.powershellgallery.com/packages/cNtfsAccessControl/).
 
@@ -38,7 +38,18 @@ Default permission entry: "Allow | Read & Execute | This folder, subfolders and 
 > If you want to assign multiple permission entries for a principal, it is strongly recommended to test them in advance to make sure they are not merging.
 In such cases the **Test-TargetResource** function will always return `$false` (i.e. resource is not in the desired state), and permissions will be reapplied every time DSC Consistency Check is executed.
 
+### cNtfsPermissionsInheritance
+
+* **Path**: Indicates the path to the target item.
+* **Enabled**: Indicates whether permissions inheritance is enabled. Set this property to `$false` to ensure it is disabled.
+* **PreserveInherited**: Indicates whether to preserve inherited permissions. Set this property to `$true` to convert inherited permissions into explicit permissions. The default value is `$false`. This property is ignored if **Enabled** is set to `$true`.
+
 ## Versions
+
+
+### 1.2.0 (January 6, 2016)
+
+* The **cNtfsPermissionsInheritance** resource was added.
 
 ### 1.1.1 (October 15, 2015)
 
