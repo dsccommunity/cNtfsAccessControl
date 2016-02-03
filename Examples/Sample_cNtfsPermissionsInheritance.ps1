@@ -1,22 +1,29 @@
+<#
+.SYNOPSIS
+    Disable NTFS permissions inheritance.
+.DESCRIPTION
+    This example shows how to use the cNtfsPermissionsInheritance DSC resource to disable NTFS permissions inheritance.
+#>
 
-configuration Sample_cNtfsPermissionsInheritance
+Configuration Sample_cNtfsPermissionsInheritance
 {
-    Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName cNtfsAccessControl
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
 
     File TestDirectory
     {
-        Ensure = 'Present'
+        Ensure          = 'Present'
         DestinationPath = 'C:\TestDirectory'
-        Type = 'Directory'
+        Type            = 'Directory'
     }
 
+    # Disable permissions inheritance
     cNtfsPermissionsInheritance DisableInheritance
     {
-        Path = 'C:\TestDirectory'
-        Enabled = $false
+        Path              = 'C:\TestDirectory'
+        Enabled           = $false
         PreserveInherited = $true
-        DependsOn = '[File]TestDirectory'
+        DependsOn         = '[File]TestDirectory'
     }
 }
 

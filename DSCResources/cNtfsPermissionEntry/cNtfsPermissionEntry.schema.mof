@@ -1,21 +1,18 @@
-
 [ClassVersion("1.0.0.0")]
 class cNtfsAccessControlInformation
 {
     [Write, Description("Indicates whether to allow or deny access to the target item."), ValueMap{"Allow","Deny"}, Values{"Allow","Deny"}] String AccessControlType;
-    [Write, Description("Indicates the access rights to be granted to the principal. Specify one or more values from the [System.Security.AccessControl.FileSystemRights] enumeration type. Multiple values can be specified by using a comma-separated string.")] String FileSystemRights[];
+    [Write, Description("Indicates the access rights to be granted to the principal.")] String FileSystemRights[];
     [Write, Description("Apply to. This property is only valid when the ItemType property is set to Directory."), ValueMap{"None","ThisFolderOnly","ThisFolderSubfoldersAndFiles","ThisFolderAndSubfolders","ThisFolderAndFiles","SubfoldersAndFilesOnly","SubfoldersOnly","FilesOnly"}, Values{"None","ThisFolderOnly","ThisFolderSubfoldersAndFiles","ThisFolderAndSubfolders","ThisFolderAndFiles","SubfoldersAndFilesOnly","SubfoldersOnly","FilesOnly"}] String Inheritance;
     [Write, Description("Only apply these permissions to objects and/or containers within this container. This property is only valid when the ItemType property is set to Directory.")] Boolean NoPropagateInherit;
 };
 
-
 [ClassVersion("1.0.0.0"), FriendlyName("cNtfsPermissionEntry")]
 class cNtfsPermissionEntry : OMI_BaseResource
 {
-    [Write, Description("Indicates if the permission entry exists. The default value is Present. Set this property to Absent to ensure that any explicit access rights the principal has are revoked."), ValueMap{"Absent","Present"}, Values{"Absent","Present"}] String Ensure;
+    [Write, Description("Indicates if the permission entry exists."), ValueMap{"Absent","Present"}, Values{"Absent","Present"}] String Ensure;
     [Key, Description("Indicates the path to the target item.")] String Path;
     [Key, Description("Indicates whether the target item is a Directory or a File."), ValueMap{"Directory","File"}, Values{"Directory","File"}] String ItemType;
-    [Key, Description("Indicates the identity of the principal. Valid name formats: Down-Level Logon Name; User Principal Name; sAMAccountName; Security Identifier.")] String Principal;
+    [Key, Description("Indicates the identity of the principal.")] String Principal;
     [Write, Description("Indicates the collection of instances of the custom cNtfsAccessControlInformation CIM class."), EmbeddedInstance("cNtfsAccessControlInformation")] String AccessControlInformation[];
 };
-

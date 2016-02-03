@@ -27,14 +27,7 @@ function Get-TargetResource
         Write-Verbose
     }
 
-    try
-    {
-        $Acl = Get-Acl -Path $Path -ErrorAction Stop
-    }
-    catch
-    {
-        throw $_.Exception.Message
-    }
+    $Acl = Get-Acl -Path $Path -ErrorAction Stop
 
     $EnabledResult = $Acl.AreAccessRulesProtected -eq $false
 
@@ -55,7 +48,6 @@ function Get-TargetResource
 
     return $ReturnValue
 }
-
 
 function Test-TargetResource
 {
@@ -92,7 +84,6 @@ function Test-TargetResource
     return $InDesiredState
 }
 
-
 function Set-TargetResource
 {
     [CmdletBinding(SupportsShouldProcess = $true)]
@@ -111,14 +102,7 @@ function Set-TargetResource
         $PreserveInherited = $false
     )
 
-    try
-    {
-        $Acl = Get-Acl -Path $Path -ErrorAction Stop
-    }
-    catch
-    {
-        throw $_.Exception.Message
-    }
+    $Acl = Get-Acl -Path $Path -ErrorAction Stop
 
     if ($Enabled -eq $false)
     {
@@ -154,6 +138,6 @@ function Set-TargetResource
             [System.IO.File]::SetAccessControl($Path, $Acl)
         }
     }
-
 }
 
+Export-ModuleMember -Function *-TargetResource

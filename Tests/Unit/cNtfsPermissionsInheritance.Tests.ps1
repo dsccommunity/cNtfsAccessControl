@@ -1,5 +1,5 @@
-$DSCModuleName   = 'cNtfsAccessControl'
-$DSCResourceName = 'cNtfsPermissionsInheritance'
+$Global:DSCModuleName   = 'cNtfsAccessControl'
+$Global:DSCResourceName = 'cNtfsPermissionsInheritance'
 
 $JoinPathSplat = @{
     Path = $PSScriptRoot
@@ -8,11 +8,6 @@ $JoinPathSplat = @{
     ErrorAction = 'Stop'
 }
 $DSCResourceModuleFile = Get-Item -Path (Join-Path @JoinPathSplat)
-
-if ($env:APPVEYOR_BUILD_VERSION)
-{
-    Add-WindowsFeature -Name Web-Server -Verbose
-}
 
 if (Get-Module -Name $DSCResourceName)
 {

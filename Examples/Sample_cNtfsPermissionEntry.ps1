@@ -1,95 +1,84 @@
+<#
+.SYNOPSIS
+    Assign NTFS permissions.
+.DESCRIPTION
+    This example shows how to use the cNtfsPermissionEntry DSC resource to assign NTFS permissions.
+#>
 
-configuration Sample_cNtfsPermissionEntry
+Configuration Sample_cNtfsPermissionEntry
 {
-    Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName cNtfsAccessControl
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
 
     File TestDirectory
     {
-        Ensure = 'Present'
+        Ensure          = 'Present'
         DestinationPath = 'C:\TestDirectory'
-        Type = 'Directory'
+        Type            = 'Directory'
     }
 
-    File TestFile
-    {
-        Ensure = 'Present'
-        DestinationPath = 'C:\TestDirectory\TestFile.txt'
-        Type = 'File'
-        Contents = ''
-        DependsOn = '[File]TestDirectory'
-    }
-
-    # EXAMPLE 1: Add a single permission entry for a principal.
-    # NOTE: If you do not specify the AccessControlInformation property, the default permission entry will be used as the reference entry.
+    # Grant a single permission
     cNtfsPermissionEntry PermissionEntry1
     {
-        Ensure = 'Present'
-        Path = 'C:\TestDirectory'
-        ItemType = 'Directory'
-        Principal = $Env:UserDomain, $Env:UserName -join '\'
-        DependsOn = '[File]TestDirectory'
-    }
-
-    # EXAMPLE 2: Add a single permission for a principal.
-    cNtfsPermissionEntry PermissionEntry2
-    {
-        Ensure = 'Present'
-        Path = 'C:\TestDirectory\TestFile.txt'
-        ItemType = 'File'
-        Principal = 'BUILTIN\Users'
+        Ensure    = 'Present'
+        Path      = 'C:\TestDirectory'
+        ItemType  = 'Directory'
+        Principal = 'BUILTIN\Power Users'
         AccessControlInformation =
         @(
             cNtfsAccessControlInformation
             {
-                AccessControlType = 'Allow'
-                FileSystemRights = 'Modify'
+                AccessControlType  = 'Allow'
+                FileSystemRights   = 'ReadAndExecute'
+                Inheritance        = 'ThisFolderSubfoldersAndFiles'
+                NoPropagateInherit = $false
             }
         )
-        DependsOn = '[File]TestFile'
+        DependsOn = '[File]TestDirectory'
     }
 
-    # EXAMPLE 3: Add multiple permission entries for a principal.
-    cNtfsPermissionEntry PermissionEntry3
+    # Grant multiple permissions at a time
+    cNtfsPermissionEntry PermissionEntry2
     {
-        Ensure = 'Present'
-        Path = 'C:\TestDirectory'
-        ItemType = 'Directory'
+        Ensure    = 'Present'
+        Path      = 'C:\TestDirectory'
+        ItemType  = 'Directory'
         Principal = 'BUILTIN\Administrators'
         AccessControlInformation =
         @(
             cNtfsAccessControlInformation
             {
-                AccessControlType = 'Allow'
-                FileSystemRights = 'Modify'
-                Inheritance = 'ThisFolderOnly'
+                AccessControlType  = 'Allow'
+                FileSystemRights   = 'Modify'
+                Inheritance        = 'ThisFolderOnly'
                 NoPropagateInherit = $false
             }
+
             cNtfsAccessControlInformation
             {
-                AccessControlType = 'Allow'
-                FileSystemRights = 'ReadAndExecute'
-                Inheritance = 'ThisFolderSubfoldersAndFiles'
+                AccessControlType  = 'Allow'
+                FileSystemRights   = 'ReadAndExecute'
+                Inheritance        = 'ThisFolderSubfoldersAndFiles'
                 NoPropagateInherit = $false
             }
+
             cNtfsAccessControlInformation
             {
-                AccessControlType = 'Allow'
-                FileSystemRights = 'AppendData', 'CreateFiles'
-                Inheritance = 'SubfoldersAndFilesOnly'
+                AccessControlType  = 'Allow'
+                FileSystemRights   = 'AppendData', 'CreateFiles'
+                Inheritance        = 'SubfoldersAndFilesOnly'
                 NoPropagateInherit = $false
             }
         )
         DependsOn = '[File]TestDirectory'
     }
 
-    # EXAMPLE 4: Remove all of the non-inherited permission entries for a principal.
-    # NOTE: In case the AccessControlInformation property is specified, it will be ignored.
-    cNtfsPermissionEntry PermissionEntry4
+    # Revoke all explicit permissions
+    cNtfsPermissionEntry PermissionEntry3
     {
-        Ensure = 'Absent'
-        Path = 'C:\TestDirectory'
-        ItemType = 'Directory'
+        Ensure    = 'Absent'
+        Path      = 'C:\TestDirectory'
+        ItemType  = 'Directory'
         Principal = 'BUILTIN\Users'
         DependsOn = '[File]TestDirectory'
     }

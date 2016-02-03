@@ -1,4 +1,3 @@
-
 [ClassVersion("1.0.0.0"), FriendlyName("cNtfsPermissionsInheritance")]
 class cNtfsPermissionsInheritance : OMI_BaseResource
 {
@@ -6,4 +5,3 @@ class cNtfsPermissionsInheritance : OMI_BaseResource
     [Required, Description("Indicates whether permissions inheritance is enabled.")] Boolean Enabled;
     [Write, Description("Indicates whether to preserve inherited permissions.")] Boolean PreserveInherited;
 };
-
