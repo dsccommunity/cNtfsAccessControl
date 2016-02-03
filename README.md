@@ -37,10 +37,12 @@ The **cNtfsPermissionEntry** DSC resource provides a mechanism to manage NTFS pe
 > If the **Ensure** property is set to `Present` and the **AccessControlInformation** property is not specified, the default permission entry will be used as the reference entry.
  Default values are:
 
+
 | ItemType  | AccessControlType | FileSystemRights | Inheritance                  |
 |---------------------------------------------------------------------------------|
 | Directory | Allow             | ReadAndExecute   | ThisFolderSubfoldersAndFiles |
 | File      | Allow             | ReadAndExecute   | None                         |
+
 
 > If the **Ensure** property is set to `Absent`, the **AccessControlInformation** property is ignored. Any explicit access rights the principal has are revoked.
 
