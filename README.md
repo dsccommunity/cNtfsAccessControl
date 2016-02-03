@@ -34,9 +34,9 @@ The **cNtfsPermissionEntry** DSC resource provides a mechanism to manage NTFS pe
 
 #### Notes
 
-> If the **Ensure** property is set to `Absent`, the **AccessControlInformation** property is ignored. Any explicit access rights the principal has are revoked.
+If the **Ensure** property is set to `Absent`, the **AccessControlInformation** property is ignored. Any explicit access rights the principal has are revoked.
 
-> If the **Ensure** property is set to `Present` and the **AccessControlInformation** property is not specified, the default permission entry will be used as the reference entry.
+If the **Ensure** property is set to `Present` and the **AccessControlInformation** property is not specified, the default permission entry will be used as the reference entry.
  Default values are:
 
 | ItemType  | AccessControlType | FileSystemRights | Inheritance                  |
@@ -44,7 +44,7 @@ The **cNtfsPermissionEntry** DSC resource provides a mechanism to manage NTFS pe
 | Directory | Allow             | ReadAndExecute   | ThisFolderSubfoldersAndFiles |
 | File      | Allow             | ReadAndExecute   | None                         |
 
-> If you want to assign multiple permission entries for a principal, it is strongly recommended to test them in advance to make sure they are not merging.
+If you want to assign multiple permission entries for a principal, it is strongly recommended to test them in advance to make sure they are not merging.
  In such cases the **Test-TargetResource** function will always return `$false` (i.e. resource is not in the desired state), and permissions will be reapplied every time DSC consistency check is executed.
 
 ### cNtfsPermissionsInheritance
@@ -81,12 +81,6 @@ The **cNtfsPermissionsInheritance** DSC resource provides a mechanism to manage 
 This example shows how to use the cNtfsPermissionEntry DSC resource to assign NTFS permissions.
 
 ```powershell
-<#
-.SYNOPSIS
-    Assign NTFS permissions.
-.DESCRIPTION
-    This example shows how to use the cNtfsPermissionEntry DSC resource to assign NTFS permissions.
-#>
 
 Configuration Sample_cNtfsPermissionEntry
 {
