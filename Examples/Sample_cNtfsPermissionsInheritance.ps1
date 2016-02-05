@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Disable NTFS permissions inheritance.
+    Disabling NTFS permissions inheritance.
 .DESCRIPTION
     This example shows how to use the cNtfsPermissionsInheritance DSC resource to disable NTFS permissions inheritance.
 #>
@@ -17,7 +17,7 @@ Configuration Sample_cNtfsPermissionsInheritance
         Type            = 'Directory'
     }
 
-    # Disable permissions inheritance
+    # Disable permissions inheritance.
     cNtfsPermissionsInheritance DisableInheritance
     {
         Path              = 'C:\TestDirectory'

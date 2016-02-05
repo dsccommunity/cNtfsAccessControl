@@ -1,5 +1,7 @@
 #requires -Version 4.0
 
+Set-StrictMode -Version Latest
+
 function Get-TargetResource
 {
     [CmdletBinding()]
@@ -41,10 +43,10 @@ function Get-TargetResource
     }
 
     $ReturnValue = @{
-            Path = $Path
-            Enabled = $EnabledResult
-            PreserveInherited = $PreserveInherited
-        }
+        Path = $Path
+        Enabled = $EnabledResult
+        PreserveInherited = $PreserveInherited
+    }
 
     return $ReturnValue
 }

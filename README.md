@@ -1,6 +1,6 @@
 # cNtfsAccessControl
 
-The **cNtfsAccessControl** module contains DSC Resources for NTFS access control management.
+The **cNtfsAccessControl** module contains DSC resources for NTFS access control management.
 
 You can also download this module from the [PowerShell Gallery](https://www.powershellgallery.com/packages/cNtfsAccessControl/).
 
@@ -20,7 +20,9 @@ The **cNtfsPermissionEntry** DSC resource provides a mechanism to manage NTFS pe
     * [Security Identifier (SID)](https://msdn.microsoft.com/en-us/library/cc246018.aspx)
 * **AccessControlInformation**: Indicates the collection of instances of the custom **cNtfsAccessControlInformation** CIM class that implements the following properties:
     * **AccessControlType**: Indicates whether to `Allow` or `Deny` access to the target item.
-    * **FileSystemRights**: Indicates the access rights to be granted to the principal. Specify one or more values from the [System.Security.AccessControl.FileSystemRights](https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.filesystemrights%28v=vs.110%29.aspx) enumeration type. Multiple values can be specified by using an array of strings or a single comma-separated string.
+    * **FileSystemRights**: Indicates the access rights to be granted to the principal.
+     Specify one or more values from the [System.Security.AccessControl.FileSystemRights](https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.filesystemrights%28v=vs.110%29.aspx) enumeration type.
+     Multiple values can be specified by using an array of strings or a single comma-separated string.
     * **Inheritance**: Apply to. This property is only valid when the **ItemType** property is set to `Directory`. Valid values are:
         * `None`
         * `ThisFolderOnly`
@@ -53,7 +55,8 @@ The **cNtfsPermissionsInheritance** DSC resource provides a mechanism to manage 
 
 * **Path**: Indicates the path to the target item.
 * **Enabled**: Indicates whether permissions inheritance is enabled. Set this property to `$false` to ensure permissions inheritance is disabled.
-* **PreserveInherited**: Indicates whether to preserve inherited permissions. Set this property to `$true` to convert inherited permissions into explicit permissions. The default value is `$false`. This property is ignored if **Enabled** is set to `$true`.
+* **PreserveInherited**: Indicates whether to preserve inherited permissions. Set this property to `$true` to convert inherited permissions into explicit permissions.
+ The default value is `$false`. This property is ignored if **Enabled** is set to `$true`.
 
 ## Versions
 
@@ -76,9 +79,9 @@ The **cNtfsPermissionsInheritance** DSC resource provides a mechanism to manage 
 
 ## Examples
 
-### Assign NTFS permissions
+### Assigning NTFS permissions
 
-This example shows how to use the cNtfsPermissionEntry DSC resource to assign NTFS permissions.
+This example shows how to use the **cNtfsPermissionEntry** DSC resource to assign NTFS permissions.
 
 ```powershell
 
@@ -94,7 +97,7 @@ Configuration Sample_cNtfsPermissionEntry
         Type            = 'Directory'
     }
 
-    # Grant a single permission
+    # Create a single permission entry for the specified principal.
     cNtfsPermissionEntry PermissionEntry1
     {
         Ensure    = 'Present'
@@ -114,7 +117,7 @@ Configuration Sample_cNtfsPermissionEntry
         DependsOn = '[File]TestDirectory'
     }
 
-    # Grant multiple permissions at a time
+    # Create multiple permission entries for the specified principal.
     cNtfsPermissionEntry PermissionEntry2
     {
         Ensure    = 'Present'
@@ -150,7 +153,7 @@ Configuration Sample_cNtfsPermissionEntry
         DependsOn = '[File]TestDirectory'
     }
 
-    # Revoke all explicit permissions
+    # Remove all non-inherited permission entries for the specified principal.
     cNtfsPermissionEntry PermissionEntry3
     {
         Ensure    = 'Absent'
@@ -169,9 +172,9 @@ Get-DscConfiguration
 
 ```
 
-### Disable NTFS permissions inheritance
+### Disabling NTFS permissions inheritance
 
-This example shows how to use the cNtfsPermissionsInheritance DSC resource to disable NTFS permissions inheritance.
+This example shows how to use the **cNtfsPermissionsInheritance** DSC resource to disable NTFS permissions inheritance.
 
 ```powershell
 
@@ -187,7 +190,7 @@ Configuration Sample_cNtfsPermissionsInheritance
         Type            = 'Directory'
     }
 
-    # Disable permissions inheritance
+    # Disable permissions inheritance.
     cNtfsPermissionsInheritance DisableInheritance
     {
         Path              = 'C:\TestDirectory'

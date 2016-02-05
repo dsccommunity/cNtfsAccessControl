@@ -29,7 +29,6 @@ InModuleScope -ModuleName $DSCResourceName -ScriptBlock {
 
     Describe "how $DSCResourceName\Get-TargetResource responds" {}
 
-
     Describe "$DSCResourceName\ConvertFrom-FileSystemAccessRule" {
 
     }

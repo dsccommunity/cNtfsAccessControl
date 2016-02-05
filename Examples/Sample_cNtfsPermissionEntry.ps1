@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Assign NTFS permissions.
+    Assigning NTFS permissions.
 .DESCRIPTION
     This example shows how to use the cNtfsPermissionEntry DSC resource to assign NTFS permissions.
 #>
@@ -17,7 +17,7 @@ Configuration Sample_cNtfsPermissionEntry
         Type            = 'Directory'
     }
 
-    # Grant a single permission
+    # Create a single permission entry for the specified principal.
     cNtfsPermissionEntry PermissionEntry1
     {
         Ensure    = 'Present'
@@ -37,7 +37,7 @@ Configuration Sample_cNtfsPermissionEntry
         DependsOn = '[File]TestDirectory'
     }
 
-    # Grant multiple permissions at a time
+    # Create multiple permission entries for the specified principal.
     cNtfsPermissionEntry PermissionEntry2
     {
         Ensure    = 'Present'
@@ -73,7 +73,7 @@ Configuration Sample_cNtfsPermissionEntry
         DependsOn = '[File]TestDirectory'
     }
 
-    # Revoke all explicit permissions
+    # Remove all non-inherited permission entries for the specified principal.
     cNtfsPermissionEntry PermissionEntry3
     {
         Ensure    = 'Absent'
@@ -89,4 +89,3 @@ Sample_cNtfsPermissionEntry -OutputPath "$Env:SystemDrive\Sample_cNtfsPermission
 Start-DscConfiguration -Path "$Env:SystemDrive\Sample_cNtfsPermissionEntry" -Force -Verbose -Wait
 
 Get-DscConfiguration
-

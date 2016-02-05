@@ -1,5 +1,7 @@
 #requires -Version 4.0 -Modules CimCmdlets
 
+Set-StrictMode -Version Latest
+
 function Get-TargetResource
 {
     [CmdletBinding()]
@@ -59,7 +61,7 @@ function Get-TargetResource
 
     [System.Security.AccessControl.FileSystemAccessRule[]]$AccessRules = @(
         $Acl.Access |
-        Where-Object {$_.IsInherited -eq $false -and $_.IdentityReference -eq $Identity.Name}
+        Where-Object -FilterScript {$_.IsInherited -eq $false -and $_.IdentityReference -eq $Identity.Name}
     )
 
     Write-Verbose -Message "Current Permission Entry Count : $($AccessRules.Count)"
@@ -73,12 +75,12 @@ function Get-TargetResource
         ForEach-Object -Process {
 
             $CimAccessRule = New-CimInstance -ClientOnly `
-                -Namespace 'root/Microsoft/Windows/DesiredStateConfiguration' `
+                -Namespace root/Microsoft/Windows/DesiredStateConfiguration `
                 -ClassName cNtfsAccessControlInformation `
                 -Property @{
-                    AccessControlType = $_.AccessControlType;
-                    FileSystemRights = $_.FileSystemRights;
-                    Inheritance = $_.Inheritance;
+                    AccessControlType = $_.AccessControlType
+                    FileSystemRights = $_.FileSystemRights
+                    Inheritance = $_.Inheritance
                     NoPropagateInherit = $_.NoPropagateInherit
                 }
 
@@ -106,7 +108,7 @@ function Get-TargetResource
 
         if ($AccessControlInformation.Count -eq 0)
         {
-            Write-Verbose -Message "The AccessControlInformation collection is either null or empty. The default permission entry will be used as the reference entry."
+            Write-Verbose -Message 'The AccessControlInformation property value is either null or empty. The default permission entry will be used as the reference entry.'
 
             $PermissionEntries += [PSCustomObject]@{
                 AccessControlType = 'Allow'
@@ -152,12 +154,16 @@ function Get-TargetResource
 
         foreach ($Item in $PermissionEntries)
         {
-            $ReferenceRule = ConvertTo-FileSystemAccessRule -ItemType $ItemType -Principal $Identity.Name `
-                -AccessControlType $Item.AccessControlType -FileSystemRights $Item.FileSystemRights `
-                -Inheritance $Item.Inheritance -NoPropagateInherit $Item.NoPropagateInherit -ErrorAction Stop
+            $ReferenceRule = ConvertTo-FileSystemAccessRule -ItemType $ItemType `
+                -Principal $Identity.Name `
+                -AccessControlType $Item.AccessControlType `
+                -FileSystemRights $Item.FileSystemRights `
+                -Inheritance $Item.Inheritance `
+                -NoPropagateInherit $Item.NoPropagateInherit `
+                -ErrorAction Stop
 
             $MatchingRule = $AccessRules |
-                Where-Object {
+                Where-Object -FilterScript {
                     $_.AccessControlType -eq $ReferenceRule.AccessControlType -and
                     $_.FileSystemRights -eq $ReferenceRule.FileSystemRights -and
                     $_.InheritanceFlags -eq $ReferenceRule.InheritanceFlags -and
@@ -235,11 +241,11 @@ function Test-TargetResource
 
     if ($InDesiredState -eq $true)
     {
-        Write-Verbose -Message "The target resource is already in the desired state. No action is required."
+        Write-Verbose -Message 'The target resource is already in the desired state. No action is required.'
     }
     else
     {
-        Write-Verbose -Message "The target resource is not in the desired state."
+        Write-Verbose -Message 'The target resource is not in the desired state.'
     }
 
     return $InDesiredState
@@ -295,7 +301,7 @@ function Set-TargetResource
 
     [System.Security.AccessControl.FileSystemAccessRule[]]$AccessRules = @(
         $Acl.Access |
-        Where-Object {$_.IsInherited -eq $false -and $_.IdentityReference -eq $Identity.Name}
+        Where-Object -FilterScript {$_.IsInherited -eq $false -and $_.IdentityReference -eq $Identity.Name}
     )
 
     if ($Ensure -eq 'Absent')
