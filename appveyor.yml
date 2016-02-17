@@ -3,7 +3,7 @@
 #---------------------------------#
 
 os: WMF 5
-version: 1.1.1.{build}
+version: 1.1.9.{build}
 install:
   - cinst -y pester
   - git clone https://github.com/PowerShell/DscResource.Tests

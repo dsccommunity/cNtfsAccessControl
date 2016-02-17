@@ -12,13 +12,13 @@ function Get-TargetResource
         [String]
         $Path,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [Boolean]
-        $Enabled,
+        $Enabled = $true,
 
         [Parameter(Mandatory = $false)]
         [Boolean]
-        $PreserveInherited = $false
+        $PreserveInherited = $true
     )
 
     $PSBoundParameters.GetEnumerator() |
@@ -61,13 +61,13 @@ function Test-TargetResource
         [String]
         $Path,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [Boolean]
-        $Enabled,
+        $Enabled = $true,
 
         [Parameter(Mandatory = $false)]
         [Boolean]
-        $PreserveInherited = $false
+        $PreserveInherited = $true
     )
 
     $TargetResource = Get-TargetResource @PSBoundParameters
@@ -76,11 +76,11 @@ function Test-TargetResource
 
     if ($InDesiredState -eq $true)
     {
-        Write-Verbose -Message "The target resource is already in the desired state. No action is required."
+        Write-Verbose -Message 'The target resource is already in the desired state. No action is required.'
     }
     else
     {
-        Write-Verbose -Message "The target resource is not in the desired state."
+        Write-Verbose -Message 'The target resource is not in the desired state.'
     }
 
     return $InDesiredState
@@ -95,13 +95,13 @@ function Set-TargetResource
         [String]
         $Path,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [Boolean]
-        $Enabled,
+        $Enabled = $true,
 
         [Parameter(Mandatory = $false)]
         [Boolean]
-        $PreserveInherited = $false
+        $PreserveInherited = $true
     )
 
     $Acl = Get-Acl -Path $Path -ErrorAction Stop
@@ -112,7 +112,7 @@ function Set-TargetResource
 
         if ($PreserveInherited -eq $true)
         {
-            Write-Verbose -Message 'Inherited permissions will be converted to expicit permissions.'
+            Write-Verbose -Message 'Inherited permissions will be converted into explicit permissions.'
         }
         else
         {
@@ -128,18 +128,40 @@ function Set-TargetResource
         $Acl.SetAccessRuleProtection($false, $false)
     }
 
-    if ($PSCmdlet.ShouldProcess($Path, 'SetAccessControl'))
+    Set-FileSystemAccessControl -Path $Path -AclObject $Acl
+}
+
+#region Helper Functions
+
+function Set-FileSystemAccessControl
+{
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({Test-Path -Path $_})]
+        [String]
+        $Path,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [System.Security.AccessControl.FileSystemSecurity]
+        $AclObject
+    )
+
+    $PathInfo = Resolve-Path -Path $Path -ErrorAction Stop
+
+    if ($PSCmdlet.ShouldProcess($Path))
     {
-        # The Set-Acl cmdlet is not used on purpose
-        if ($Acl -is [System.Security.AccessControl.DirectorySecurity])
+        if ($AclObject -is [System.Security.AccessControl.DirectorySecurity])
         {
-            [System.IO.Directory]::SetAccessControl($Path, $Acl)
+            [System.IO.Directory]::SetAccessControl($PathInfo.ProviderPath, $AclObject)
         }
         else
         {
-            [System.IO.File]::SetAccessControl($Path, $Acl)
+            [System.IO.File]::SetAccessControl($PathInfo.ProviderPath, $AclObject)
         }
     }
 }
 
-Export-ModuleMember -Function *-TargetResource
+#endregion

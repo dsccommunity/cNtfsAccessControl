@@ -17,7 +17,7 @@ function Get-TargetResource
         [String]
         $Path,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateSet('Directory', 'File')]
         [String]
         $ItemType,
@@ -39,29 +39,30 @@ function Get-TargetResource
         Write-Verbose
     }
 
-    if ($ItemType -eq 'Directory')
+    if ($PSBoundParameters.ContainsKey('ItemType'))
     {
-        $PathType = 'Container'
-    }
-    else
-    {
-        $PathType = 'Leaf'
+        Write-Verbose -Message 'The ItemType property is deprecated and should not be used.'
     }
 
-    if (Test-Path -Path $Path -PathType $PathType)
+    $Acl = Get-Acl -Path $Path -ErrorAction Stop
+
+    if ($Acl -is [System.Security.AccessControl.DirectorySecurity])
     {
-        $Acl = Get-Acl -Path $Path -ErrorAction Stop
+        $ItemType = 'Directory'
     }
     else
     {
-        throw "Could not find the item of type '$ItemType' at the specified path: '$Path'."
+        $ItemType = 'File'
     }
 
     $Identity = Resolve-IdentityReference -Identity $Principal -ErrorAction Stop
 
     [System.Security.AccessControl.FileSystemAccessRule[]]$AccessRules = @(
         $Acl.Access |
-        Where-Object -FilterScript {$_.IsInherited -eq $false -and $_.IdentityReference -eq $Identity.Name}
+        Where-Object -FilterScript {
+            ($_.IsInherited -eq $false) -and
+            ($_.IdentityReference -eq $Identity.Name)
+        }
     )
 
     Write-Verbose -Message "Current Permission Entry Count : $($AccessRules.Count)"
@@ -75,8 +76,8 @@ function Get-TargetResource
         ForEach-Object -Process {
 
             $CimAccessRule = New-CimInstance -ClientOnly `
-                -Namespace root/Microsoft/Windows/DesiredStateConfiguration `
-                -ClassName cNtfsAccessControlInformation `
+                -Namespace 'root/Microsoft/Windows/DesiredStateConfiguration' `
+                -ClassName 'cNtfsAccessControlInformation' `
                 -Property @{
                     AccessControlType = $_.AccessControlType
                     FileSystemRights = $_.FileSystemRights
@@ -106,25 +107,14 @@ function Get-TargetResource
 
         [PSCustomObject[]]$PermissionEntries = @()
 
-        if ($AccessControlInformation.Count -eq 0)
-        {
-            Write-Verbose -Message 'The AccessControlInformation property value is either null or empty. The default permission entry will be used as the reference entry.'
-
-            $PermissionEntries += [PSCustomObject]@{
-                AccessControlType = 'Allow'
-                FileSystemRights = 'ReadAndExecute'
-                Inheritance = $null
-                NoPropagateInherit = $false
-            }
-        }
-        else
+        if ($PSBoundParameters.ContainsKey('AccessControlInformation'))
         {
             foreach ($Item in $AccessControlInformation)
             {
-                $AccessControlType = $Item.CimInstanceProperties['AccessControlType'].Value
-                $FileSystemRights = $Item.CimInstanceProperties['FileSystemRights'].Value
-                $Inheritance = $Item.CimInstanceProperties['Inheritance'].Value
-                $NoPropagateInherit = $Item.CimInstanceProperties['NoPropagateInherit'].Value
+                $AccessControlType = $Item.CimInstanceProperties.Where({$_.Name -eq 'AccessControlType'}).ForEach({$_.Value})
+                $FileSystemRights = $Item.CimInstanceProperties.Where({$_.Name -eq 'FileSystemRights'}).ForEach({$_.Value})
+                $Inheritance = $Item.CimInstanceProperties.Where({$_.Name -eq 'Inheritance'}).ForEach({$_.Value})
+                $NoPropagateInherit = $Item.CimInstanceProperties.Where({$_.Name -eq 'NoPropagateInherit'}).ForEach({$_.Value})
 
                 if (-not $AccessControlType)
                 {
@@ -149,12 +139,24 @@ function Get-TargetResource
                 }
             }
         }
+        else
+        {
+            Write-Verbose -Message 'The AccessControlInformation property is not specified. The default permission entry will be used as the reference entry.'
+
+            $PermissionEntries += [PSCustomObject]@{
+                AccessControlType = 'Allow'
+                FileSystemRights = 'ReadAndExecute'
+                Inheritance = $null
+                NoPropagateInherit = $false
+            }
+        }
 
         Write-Verbose -Message "Desired Permission Entry Count : $($PermissionEntries.Count)"
 
         foreach ($Item in $PermissionEntries)
         {
-            $ReferenceRule = ConvertTo-FileSystemAccessRule -ItemType $ItemType `
+            $ReferenceRule = ConvertTo-FileSystemAccessRule `
+                -ItemType $ItemType `
                 -Principal $Identity.Name `
                 -AccessControlType $Item.AccessControlType `
                 -FileSystemRights $Item.FileSystemRights `
@@ -164,15 +166,15 @@ function Get-TargetResource
 
             $MatchingRule = $AccessRules |
                 Where-Object -FilterScript {
-                    $_.AccessControlType -eq $ReferenceRule.AccessControlType -and
-                    $_.FileSystemRights -eq $ReferenceRule.FileSystemRights -and
-                    $_.InheritanceFlags -eq $ReferenceRule.InheritanceFlags -and
-                    $_.PropagationFlags -eq $ReferenceRule.PropagationFlags
+                    ($_.AccessControlType -eq $ReferenceRule.AccessControlType) -and
+                    ($_.FileSystemRights -eq $ReferenceRule.FileSystemRights) -and
+                    ($_.InheritanceFlags -eq $ReferenceRule.InheritanceFlags) -and
+                    ($_.PropagationFlags -eq $ReferenceRule.PropagationFlags)
                 }
 
             if ($MatchingRule)
             {
-                "[FOUND] Permission Entry:",
+                "(FOUND) Permission Entry:",
                 "> IdentityReference : '$($MatchingRule.IdentityReference)'",
                 "> AccessControlType : '$($MatchingRule.AccessControlType)'",
                 "> FileSystemRights  : '$($MatchingRule.FileSystemRights)'",
@@ -184,7 +186,7 @@ function Get-TargetResource
             {
                 $EnsureResult = 'Absent'
 
-                "[NOT FOUND] Permission Entry:",
+                "(NOT FOUND) Permission Entry:",
                 "> IdentityReference : '$($ReferenceRule.IdentityReference)'",
                 "> AccessControlType : '$($ReferenceRule.AccessControlType)'",
                 "> FileSystemRights  : '$($ReferenceRule.FileSystemRights)'",
@@ -221,7 +223,7 @@ function Test-TargetResource
         [String]
         $Path,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateSet('Directory', 'File')]
         [String]
         $ItemType,
@@ -265,7 +267,7 @@ function Set-TargetResource
         [String]
         $Path,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [ValidateSet('Directory', 'File')]
         [String]
         $ItemType,
@@ -279,74 +281,53 @@ function Set-TargetResource
         $AccessControlInformation
     )
 
-    if ($ItemType -eq 'Directory')
+    if ($PSBoundParameters.ContainsKey('ItemType'))
     {
-        $PathType = 'Container'
-    }
-    else
-    {
-        $PathType = 'Leaf'
+        Write-Verbose -Message 'The ItemType property is deprecated and should not be used.'
     }
 
-    if (Test-Path -Path $Path -PathType $PathType)
+    $Acl = Get-Acl -Path $Path -ErrorAction Stop
+
+    if ($Acl -is [System.Security.AccessControl.DirectorySecurity])
     {
-        $Acl = Get-Acl -Path $Path -ErrorAction Stop
+        $ItemType = 'Directory'
     }
     else
     {
-        throw "Could not find the item of type '$ItemType' at the specified path: '$Path'."
+        $ItemType = 'File'
     }
 
     $Identity = Resolve-IdentityReference -Identity $Principal -ErrorAction Stop
 
     [System.Security.AccessControl.FileSystemAccessRule[]]$AccessRules = @(
         $Acl.Access |
-        Where-Object -FilterScript {$_.IsInherited -eq $false -and $_.IdentityReference -eq $Identity.Name}
+        Where-Object -FilterScript {
+            ($_.IsInherited -eq $false) -and
+            ($_.IdentityReference -eq $Identity.Name)
+        }
     )
 
-    if ($Ensure -eq 'Absent')
+    if ($AccessRules.Count -ne 0)
     {
-        if ($AccessRules.Count -ne 0)
-        {
-            "Removing all of the non-inherited permission entries for principal '{0}' on path '{1}'." -f
-                $($AccessRules[0].IdentityReference), $Path |
-            Write-Verbose
+        "Removing all explicit permissions for principal '{0}' on path '{1}'." -f $($AccessRules[0].IdentityReference), $Path |
+        Write-Verbose
 
-            $Result = $null
-            $Acl.ModifyAccessRule('RemoveAll', $AccessRules[0], [Ref]$Result)
-        }
+        $Modified = $null
+        $Acl.ModifyAccessRule('RemoveAll', $AccessRules[0], [Ref]$Modified)
     }
-    else
+
+    if ($Ensure -eq 'Present')
     {
-        if ($AccessRules.Count -ne 0)
-        {
-            "Removing all of the non-inherited permission entries for principal '{0}' on path '{1}'." -f
-                $($AccessRules[0].IdentityReference), $Path |
-            Write-Verbose
-
-            $Result = $null
-            $Acl.ModifyAccessRule('RemoveAll', $AccessRules[0], [Ref]$Result)
-        }
-
         [PSCustomObject[]]$PermissionEntries = @()
 
-        if ($AccessControlInformation.Count -eq 0)
-        {
-            $PermissionEntries += [PSCustomObject]@{
-                AccessControlType = 'Allow'
-                FileSystemRights = 'ReadAndExecute'
-                Inheritance = $null
-                NoPropagateInherit = $false
-            }
-        }
-        else
+        if ($PSBoundParameters.ContainsKey('AccessControlInformation'))
         {
             foreach ($Item in $AccessControlInformation)
             {
-                $AccessControlType = $Item.CimInstanceProperties['AccessControlType'].Value
-                $FileSystemRights = $Item.CimInstanceProperties['FileSystemRights'].Value
-                $Inheritance = $Item.CimInstanceProperties['Inheritance'].Value
-                $NoPropagateInherit = $Item.CimInstanceProperties['NoPropagateInherit'].Value
+                $AccessControlType = $Item.CimInstanceProperties.Where({$_.Name -eq 'AccessControlType'}).ForEach({$_.Value})
+                $FileSystemRights = $Item.CimInstanceProperties.Where({$_.Name -eq 'FileSystemRights'}).ForEach({$_.Value})
+                $Inheritance = $Item.CimInstanceProperties.Where({$_.Name -eq 'Inheritance'}).ForEach({$_.Value})
+                $NoPropagateInherit = $Item.CimInstanceProperties.Where({$_.Name -eq 'NoPropagateInherit'}).ForEach({$_.Value})
 
                 if (-not $AccessControlType)
                 {
@@ -371,10 +352,20 @@ function Set-TargetResource
                 }
             }
         }
+        else
+        {
+            $PermissionEntries += [PSCustomObject]@{
+                AccessControlType = 'Allow'
+                FileSystemRights = 'ReadAndExecute'
+                Inheritance = $null
+                NoPropagateInherit = $false
+            }
+        }
 
         foreach ($Item in $PermissionEntries)
         {
-            $ReferenceRule = ConvertTo-FileSystemAccessRule -ItemType $ItemType `
+            $ReferenceRule = ConvertTo-FileSystemAccessRule `
+                -ItemType $ItemType `
                 -Principal $Identity.Name `
                 -AccessControlType $Item.AccessControlType `
                 -FileSystemRights $Item.FileSystemRights `
@@ -389,18 +380,7 @@ function Set-TargetResource
         }
     }
 
-    if ($PSCmdlet.ShouldProcess($Path, 'SetAccessControl'))
-    {
-        # The Set-Acl cmdlet is not used on purpose
-        if ($ItemType -eq 'Directory')
-        {
-            [System.IO.Directory]::SetAccessControl($Path, $Acl)
-        }
-        else
-        {
-            [System.IO.File]::SetAccessControl($Path, $Acl)
-        }
-    }
+    Set-FileSystemAccessControl -Path $Path -AclObject $Acl
 }
 
 #region Helper Functions
@@ -470,7 +450,7 @@ function ConvertFrom-FileSystemAccessRule
         $OutputObject = [PSCustomObject]@{
             ItemType = $ItemType
             Principal = [String]$InputObject.IdentityReference
-            AccessControlType  = [String]$InputObject.AccessControlType
+            AccessControlType = [String]$InputObject.AccessControlType
             FileSystemRights = [String]$InputObject.FileSystemRights
             Inheritance = $Inheritance
             NoPropagateInherit = $NoPropagateInherit
@@ -589,10 +569,42 @@ function ConvertTo-FileSystemAccessRule
             [System.Security.AccessControl.PropagationFlags]$PropagationFlags = 'None'
         }
 
-        $OutputObject = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule `
-            -ArgumentList $Principal, $FileSystemRights, $InheritanceFlags, $PropagationFlags, $AccessControlType
+        $OutputObject = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList @(
+            $Principal, $FileSystemRights, $InheritanceFlags, $PropagationFlags, $AccessControlType
+        )
 
         return $OutputObject
+    }
+}
+
+function Set-FileSystemAccessControl
+{
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({Test-Path -Path $_})]
+        [String]
+        $Path,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [System.Security.AccessControl.FileSystemSecurity]
+        $AclObject
+    )
+
+    $PathInfo = Resolve-Path -Path $Path -ErrorAction Stop
+
+    if ($PSCmdlet.ShouldProcess($Path))
+    {
+        if ($AclObject -is [System.Security.AccessControl.DirectorySecurity])
+        {
+            [System.IO.Directory]::SetAccessControl($PathInfo.ProviderPath, $AclObject)
+        }
+        else
+        {
+            [System.IO.File]::SetAccessControl($PathInfo.ProviderPath, $AclObject)
+        }
     }
 }
 
@@ -602,6 +614,7 @@ function Resolve-IdentityReference
     param
     (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
         [String]
         $Identity
     )
@@ -623,15 +636,17 @@ function Resolve-IdentityReference
             $SID = $Identity.Translate([System.Security.Principal.SecurityIdentifier])
             $NTAccount = $SID.Translate([System.Security.Principal.NTAccount])
 
-            $OutputObject = [PSCustomObject]@{Name = $NTAccount.Value; SID = $SID.Value}
+            $OutputObject = [PSCustomObject]@{
+                Name = $NTAccount.Value
+                SID = $SID.Value
+            }
 
             return $OutputObject
         }
         catch
         {
-            "Unable to resolve identity reference '{0}'. Error: '{1}'" -f $Identity, $_.Exception.Message |
-            Write-Error
-
+            $ErrorMessage = "Could not resolve identity reference '{0}': '{1}'." -f $Identity, $_.Exception.Message
+            Write-Error -Exception $_.Exception -Message $ErrorMessage
             return
         }
     }
