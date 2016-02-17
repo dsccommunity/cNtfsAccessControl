@@ -25,74 +25,74 @@ $TestEnvironment = Initialize-TestEnvironment -DSCModuleName $Global:DSCModuleNa
 
 #endregion
 
-#region Helper Functions
-
-function Set-NewTempFileAcl
-{
-    <#
-    .SYNOPSYS
-        Creates temporary files for unit testing of the cNtfsPermissionEntry DSC resource.
-    .DESCRIPTION
-        The Set-NewTempFileAcl function creates temporary files and performs the following actions on them:
-        - Disables NTFS permissions inheritance.
-        - Removes all permission entries.
-        - Grants Full Control permission to the calling user to ensure the file can be easily removed later.
-        - Optionally adds additional permission entries.
-    #>
-    [CmdletBinding()]
-    param
-    (
-        [Parameter(Mandatory = $false)]
-        [ValidateNotNullOrEmpty()]
-        [String]
-        $Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([System.IO.Path]::GetRandomFileName())),
-
-        [Parameter(Mandatory = $false)]
-        [System.Security.AccessControl.FileSystemAccessRule[]]
-        $AccessRulesToAdd,
-
-        [Parameter(Mandatory = $false)]
-        [Switch]
-        $PassThru
-    )
-
-    try
-    {
-        $File = New-Item -Path $Path -ItemType File -Force -ErrorAction Stop -Verbose:$VerbosePreference
-        $Acl = $File.GetAccessControl()
-
-        $Acl.SetAccessRuleProtection($true, $false)
-        $Acl.Access.ForEach({[Void]$Acl.RemoveAccessRule($_)})
-
-        $CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-        $Acl.AddAccessRule((New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $CurrentUser, 'FullControl', 'Allow'))
-
-        if ($PSBoundParameters.ContainsKey('AccessRulesToAdd'))
-        {
-            $AccessRulesToAdd.ForEach({$Acl.AddAccessRule($_)})
-        }
-
-        [System.IO.File]::SetAccessControl($File.FullName, $Acl)
-
-        if ($PassThru)
-        {
-            return $File
-        }
-    }
-    catch
-    {
-        throw
-    }
-}
-
-#endregion
-
 # Begin Testing
 try
 {
-    #region Pester Tests
-
     InModuleScope $Global:DSCResourceName {
+
+        #region Helper Functions
+
+        function Set-NewTempFileAcl
+        {
+            <#
+            .SYNOPSYS
+                Creates temporary files for unit testing of the cNtfsPermissionEntry DSC resource.
+            .DESCRIPTION
+                The Set-NewTempFileAcl function creates temporary files and performs the following actions on them:
+                - Disables NTFS permissions inheritance.
+                - Removes all permission entries.
+                - Grants Full Control permission to the calling user to ensure the file can be easily removed later.
+                - Optionally adds additional permission entries.
+            #>
+            [CmdletBinding()]
+            param
+            (
+                [Parameter(Mandatory = $false)]
+                [ValidateNotNullOrEmpty()]
+                [String]
+                $Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([System.IO.Path]::GetRandomFileName())),
+
+                [Parameter(Mandatory = $false)]
+                [System.Security.AccessControl.FileSystemAccessRule[]]
+                $AccessRulesToAdd,
+
+                [Parameter(Mandatory = $false)]
+                [Switch]
+                $PassThru
+            )
+
+            try
+            {
+                $File = New-Item -Path $Path -ItemType File -Force -ErrorAction Stop -Verbose:$VerbosePreference
+                $Acl = $File.GetAccessControl()
+
+                $Acl.SetAccessRuleProtection($true, $false)
+                $Acl.Access.ForEach({[Void]$Acl.RemoveAccessRule($_)})
+
+                $CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+                $Acl.AddAccessRule((New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $CurrentUser, 'FullControl', 'Allow'))
+
+                if ($PSBoundParameters.ContainsKey('AccessRulesToAdd'))
+                {
+                    $AccessRulesToAdd.ForEach({$Acl.AddAccessRule($_)})
+                }
+
+                [System.IO.File]::SetAccessControl($File.FullName, $Acl)
+
+                if ($PassThru)
+                {
+                    return $File
+                }
+            }
+            catch
+            {
+                throw
+            }
+        }
+
+        #endregion
+
+        #region Pester Tests
 
         Describe "$Global:DSCResourceName\Get-TargetResource" {
 
@@ -681,9 +681,9 @@ try
 
         }
 
-    }
+        #endregion
 
-    #endregion
+    }
 }
 catch
 {
