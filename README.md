@@ -24,7 +24,7 @@ The **cNtfsPermissionEntry** DSC resource provides a mechanism to manage NTFS pe
     * **FileSystemRights**: Indicates the access rights to be granted to the principal. This property is required.
      Specify one or more values from the [System.Security.AccessControl.FileSystemRights](https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.filesystemrights%28v=vs.110%29.aspx) enumeration type.
      Multiple values can be specified by using an array of strings or a single comma-separated string.
-    * **Inheritance**: Indicates the inheritance type of the permission entry (the "*Applies to*" option). This property is only applicable to directories. Valid values are:
+    * **Inheritance**: Indicates the inheritance type of the permission entry (the "**Applies to**" option). This property is only applicable to directories. Valid values are:
         * `None`
         * `ThisFolderOnly`
         * `ThisFolderSubfoldersAndFiles` (the default value)
@@ -34,7 +34,7 @@ The **cNtfsPermissionEntry** DSC resource provides a mechanism to manage NTFS pe
         * `SubfoldersOnly`
         * `FilesOnly`
     * **NoPropagateInherit**: Indicates whether the permission entry is not propagated to child objects. This property is only applicable to directories.
-     Set this property to `$true` to ensure that the "*Only apply these permissions to objects and/or containers within this container*" option is enabled. The default value is `$false`.
+     Set this property to `$true` to ensure that the "**Only apply these permissions to objects and/or containers within this container**" option is enabled. The default value is `$false`.
 
 #### Notes
 
@@ -46,7 +46,7 @@ If the **Ensure** property is set to `Present` and the **AccessControlInformatio
 | ItemType    | AccessControlType   | FileSystemRights   | Inheritance                    | NoPropagateInherit |
 |-------------|---------------------|--------------------|--------------------------------|--------------------|
 | `Directory` | `Allow`             | `ReadAndExecute`   | `ThisFolderSubfoldersAndFiles` | `$false`           |
-| `File`      | `Allow`             | `ReadAndExecute`   | *n/a*                          | *n/a*              |
+| `File`      | `Allow`             | `ReadAndExecute`   | n/a                            | n/a                |
 
 If you want to assign multiple permission entries for a particular principal, it is recommended to make sure they are not automatically combined into a single permission entry.
  In such cases the **Test-TargetResource** function will always return `$false` (i.e., the resource is not in the desired state), and permissions will be reapplied every time DSC consistency check is executed.
