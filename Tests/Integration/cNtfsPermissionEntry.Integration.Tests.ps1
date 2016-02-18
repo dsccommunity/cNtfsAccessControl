@@ -31,12 +31,12 @@ try
     $ConfigFile = Join-Path -Path $PSScriptRoot -ChildPath "$($Global:DSCResourceName).Config.ps1"
     . $ConfigFile
 
-    # Create temporary directory
-    $TempDirectory = New-Item -Path $TestParameters.Path -ItemType Directory -Force -Verbose
-    $Acl = $TempDirectory.GetAccessControl()
+    # Create a new temporary directory
+    $TestDirectory = New-Item -Path $TestParameters.Path -ItemType Directory -Force -Verbose
+    $Acl = $TestDirectory.GetAccessControl()
     $Acl.SetAccessRuleProtection($false, $false)
     $Acl.Access.Where({-not $_.IsInherited}).ForEach({[Void]$Acl.RemoveAccessRule($_)})
-    [System.IO.Directory]::SetAccessControl($TempDirectory.FullName, $Acl)
+    [System.IO.Directory]::SetAccessControl($TestDirectory.FullName, $Acl)
 
     #region Integration Tests
 
@@ -80,9 +80,8 @@ finally
 
     #endregion
 
-    # Remove temporary directory
-    if ($TempDirectory)
+    if ($TestDirectory)
     {
-        Remove-Item -Path $TempDirectory.FullName -Force -Recurse -Verbose
+        Remove-Item -Path $TestDirectory.FullName -Force -Recurse -Verbose
     }
 }

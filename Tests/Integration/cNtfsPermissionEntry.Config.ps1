@@ -10,7 +10,7 @@ Configuration cNtfsPermissionEntry_Config
 
     Node localhost
     {
-        cNtfsPermissionEntry Integration_Test
+        cNtfsPermissionEntry Test1
         {
             Ensure = $TestParameters.Ensure
             Path = $TestParameters.Path
