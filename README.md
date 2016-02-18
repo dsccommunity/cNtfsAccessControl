@@ -19,12 +19,12 @@ The **cNtfsPermissionEntry** DSC resource provides a mechanism to manage NTFS pe
     * [Security Accounts Manager (SAM) Account Name (sAMAccountName)](https://msdn.microsoft.com/en-us/library/windows/desktop/ms679635%28v=vs.85%29.aspx)
     * [Security Identifier (SID)](https://msdn.microsoft.com/en-us/library/cc246018.aspx)
     * [User Principal Name (UPN)](https://msdn.microsoft.com/en-us/library/windows/desktop/aa380525%28v=vs.85%29.aspx#user_principal_name)
-* **AccessControlInformation**: Indicates the collection of instances of the custom **cNtfsAccessControlInformation** CIM class that implements the following properties:
+* **AccessControlInformation**: Indicates the access control information in the form of an array of instances of the **cNtfsAccessControlInformation** CIM class. Its properties are as follows:
     * **AccessControlType**: Indicates whether to `Allow` or `Deny` access to the target item. The default value is `Allow`.
-    * **FileSystemRights**: Indicates the access rights to be granted to the principal. This property is required.
+    * **FileSystemRights**: Indicates the access rights to be granted to the principal.
      Specify one or more values from the [System.Security.AccessControl.FileSystemRights](https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.filesystemrights%28v=vs.110%29.aspx) enumeration type.
-     Multiple values can be specified by using an array of strings or a single comma-separated string.
-    * **Inheritance**: Indicates the inheritance type of the permission entry (the "**Applies to**" option). This property is only applicable to directories. Valid values are:
+     Multiple values can be specified by using an array of strings or a single comma-separated string. The default value is `ReadAndExecute`.
+    * **Inheritance**: Indicates the inheritance type of the permission entry. This property is only applicable to directories. Valid values are:
         * `None`
         * `ThisFolderOnly`
         * `ThisFolderSubfoldersAndFiles` (the default value)
@@ -34,22 +34,7 @@ The **cNtfsPermissionEntry** DSC resource provides a mechanism to manage NTFS pe
         * `SubfoldersOnly`
         * `FilesOnly`
     * **NoPropagateInherit**: Indicates whether the permission entry is not propagated to child objects. This property is only applicable to directories.
-     Set this property to `$true` to ensure that the "**Only apply these permissions to objects and/or containers within this container**" option is enabled. The default value is `$false`.
-
-#### Notes
-
-If the **Ensure** property is set to `Absent`, the **AccessControlInformation** property is ignored. All explicit permissions associated with the specified principal are removed.
-
-If the **Ensure** property is set to `Present` and the **AccessControlInformation** property is not specified, the default permission entry will be used as the reference entry.
- Default values are:
-
-| ItemType    | AccessControlType   | FileSystemRights   | Inheritance                    | NoPropagateInherit |
-|-------------|---------------------|--------------------|--------------------------------|--------------------|
-| `Directory` | `Allow`             | `ReadAndExecute`   | `ThisFolderSubfoldersAndFiles` | `$false`           |
-| `File`      | `Allow`             | `ReadAndExecute`   | n/a                            | n/a                |
-
-If you want to assign multiple permission entries for a particular principal, it is recommended to make sure they are not automatically combined into a single permission entry.
- In such cases the **Test-TargetResource** function will always return `$false` (i.e., the resource is not in the desired state), and permissions will be reapplied every time DSC consistency check is executed.
+     Set this property to `$true` to ensure inheritance is limited only to those sub-objects that are immediately subordinate to the target item. The default value is `$false`.
 
 ### cNtfsPermissionsInheritance
 
@@ -65,8 +50,8 @@ The **cNtfsPermissionsInheritance** DSC resource provides a mechanism to manage 
 ### Unreleased
 
 * The **cNtfsPermissionsInheritance** resource was added.
+* The **ItemType** property was deprecated.
 * Integration and unit tests were added.
-* General improvements.
 
 ### 1.1.1 (October 15, 2015)
 
@@ -157,11 +142,6 @@ Configuration Sample_cNtfsPermissionEntry
     }
 }
 
-$OutputPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath 'Sample_cNtfsPermissionEntry'
-Sample_cNtfsPermissionEntry -OutputPath $OutputPath
-Start-DscConfiguration -Path $OutputPath -Force -Verbose -Wait
-Get-DscConfiguration
-
 ```
 
 ### Disable NTFS permissions inheritance
@@ -169,7 +149,6 @@ Get-DscConfiguration
 This example shows how to use the **cNtfsPermissionsInheritance** DSC resource to disable NTFS permissions inheritance.
 
 ```powershell
-
 Configuration Sample_cNtfsPermissionsInheritance
 {
     Import-DscResource -ModuleName cNtfsAccessControl
@@ -193,10 +172,5 @@ Configuration Sample_cNtfsPermissionsInheritance
         DependsOn = '[File]TestDirectory'
     }
 }
-
-$OutputPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath 'Sample_cNtfsPermissionsInheritance'
-Sample_cNtfsPermissionsInheritance -OutputPath $OutputPath
-Start-DscConfiguration -Path $OutputPath -Force -Verbose -Wait
-Get-DscConfiguration
 
 ```

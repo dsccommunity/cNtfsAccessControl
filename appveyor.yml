@@ -39,11 +39,42 @@ test_script:
 deploy_script:
     - ps: |
         $ManifestFileName = 'cNtfsAccessControl.psd1'
-        $StagingDirectoryPath = (Resolve-Path -Path '..').Path
         $ManifestFilePath = Join-Path -Path $PWD -ChildPath $ManifestFileName
+        $StagingDirectoryPath = (Resolve-Path -Path '..').Path
+
+        # Replace module version in the manifest file
         (Get-Content -Path $ManifestFilePath) -replace "(ModuleVersion\s*?=\s*?['|`"])(.*?)(['|`"])", ('${1}' + $env:APPVEYOR_BUILD_VERSION + '${3}') |
         Set-Content -Path $ManifestFilePath
+
+        # Load module manifest
+        $Manifest = Invoke-Expression -Command (Get-Content -Path $ManifestFilePath | Out-String)
+
+        # Create project artifact
         $ZipFilePath = Join-Path -Path $StagingDirectoryPath -ChildPath "$(Split-Path -Path $PWD -Leaf).zip"
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         [System.IO.Compression.ZipFile]::CreateFromDirectory($PWD, $ZipFilePath)
-        Push-AppVeyorArtifact -Path $ZipFilePath
+
+        # Create NuGet package artifact
+        $NuspecSplat = @{
+            packageName        = $env:APPVEYOR_PROJECT_NAME
+            version            = $env:APPVEYOR_BUILD_VERSION
+            author             = $Manifest.Author
+            owners             = $Manifest.Author
+            licenseUrl         = $Manifest.PrivateData.PSData.LicenseUri
+            projectUrl         = $Manifest.PrivateData.PSData.ProjectUri
+            packageDescription = $env:APPVEYOR_PROJECT_NAME
+            tags               = (($Manifest.PrivateData.PSData.Tags) -join ' ')
+            destinationPath    = '.'
+        }
+
+        New-Nuspec @NuspecSplat
+        nuget pack ".\$($env:APPVEYOR_PROJECT_NAME).nuspec" -OutputDirectory '.'
+        $NuGetPackageName = "$($env:APPVEYOR_PROJECT_NAME).$($env:APPVEYOR_BUILD_VERSION).nupkg"
+        $NuGetPackagePath = (Get-Item -Path $NuGetPackageName).FullName
+
+        # Push artifacts
+        @($ZipFilePath, $NuGetPackagePath) |
+        ForEach-Object -Process {
+            Write-Verbose -Message "Pushing package '$($_)' to AppVeyor artifacts" -Verbose
+            Push-AppVeyorArtifact -Path $_
+        }
