@@ -19,7 +19,7 @@ Configuration Sample_cNtfsPermissionsInheritance
         Type = 'Directory'
     }
 
-    # Disable permissions inheritance.
+    # Disable NTFS permissions inheritance.
     cNtfsPermissionsInheritance DisableInheritance
     {
         Path = $TestDirectoryPath
@@ -32,4 +32,3 @@ Configuration Sample_cNtfsPermissionsInheritance
 $OutputPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath 'Sample_cNtfsPermissionsInheritance'
 Sample_cNtfsPermissionsInheritance -OutputPath $OutputPath
 Start-DscConfiguration -Path $OutputPath -Force -Verbose -Wait
-Get-DscConfiguration

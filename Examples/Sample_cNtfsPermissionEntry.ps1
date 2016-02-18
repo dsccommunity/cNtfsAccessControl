@@ -19,7 +19,7 @@ Configuration Sample_cNtfsPermissionEntry
         Type = 'Directory'
     }
 
-    # Create a single permission entry for the local 'BUILTIN\Users' group.
+    # Create a single permission entry for the local 'Users' group.
     cNtfsPermissionEntry PermissionEntry1
     {
         Ensure = 'Present'
@@ -37,7 +37,7 @@ Configuration Sample_cNtfsPermissionEntry
         DependsOn = '[File]TestDirectory'
     }
 
-    # Create multiple permission entries for the 'BUILTIN\Administrators' group.
+    # Create multiple permission entries for the 'Administrators' group.
     cNtfsPermissionEntry PermissionEntry2
     {
         Ensure = 'Present'
@@ -63,7 +63,7 @@ Configuration Sample_cNtfsPermissionEntry
         DependsOn = '[File]TestDirectory'
     }
 
-    # Remove all explicit permissions for the 'NT AUTHORITY\Authenticated Users' group.
+    # Ensure that all explicit permissions associated with the 'Authenticated Users' group are removed.
     cNtfsPermissionEntry PermissionEntry3
     {
         Ensure = 'Absent'
@@ -76,4 +76,3 @@ Configuration Sample_cNtfsPermissionEntry
 $OutputPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath 'Sample_cNtfsPermissionEntry'
 Sample_cNtfsPermissionEntry -OutputPath $OutputPath
 Start-DscConfiguration -Path $OutputPath -Force -Verbose -Wait
-Get-DscConfiguration
