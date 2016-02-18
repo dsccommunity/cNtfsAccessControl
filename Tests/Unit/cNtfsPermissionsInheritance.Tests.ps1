@@ -28,6 +28,8 @@ $TestEnvironment = Initialize-TestEnvironment -DSCModuleName $Global:DSCModuleNa
 # Begin Testing
 try
 {
+    #region Unit Tests
+
     InModuleScope -ModuleName $DSCResourceName -ScriptBlock {
 
         #region Helper Functions
@@ -90,8 +92,6 @@ try
         }
 
         #endregion
-
-        #region Pester Tests
 
         Describe "$Global:DSCResourceName\Get-TargetResource" {
 
@@ -235,11 +235,11 @@ try
 
         }
 
-        #endregion
-
     }
+
+    #endregion
 }
-catch
+finally
 {
     #region Footer
 
