@@ -153,6 +153,12 @@ function Get-TargetResource
 
         Write-Verbose -Message "Desired Permission Entry Count : $($PermissionEntries.Count)"
 
+        if ($AccessRules.Count -ne $PermissionEntries.Count)
+        {
+            Write-Verbose -Message 'The number of current permission entries is different from the number of desired permission entries.'
+            $EnsureResult = 'Absent'
+        }
+
         foreach ($Item in $PermissionEntries)
         {
             $ReferenceRule = ConvertTo-FileSystemAccessRule `
