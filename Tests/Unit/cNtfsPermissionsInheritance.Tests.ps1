@@ -39,7 +39,7 @@ try
                 Creates temporary files for unit testing of the cNtfsPermissionsInheritance DSC resource.
             .DESCRIPTION
                 The Set-NewTempFileAclInheritance function creates temporary files and performs the following actions on them:
-                - Grants Full Control permission to the calling user to ensure the file can be easily removed later.
+                - Grants Full Control permission to the calling user to ensure the file can be removed later.
                 - Optionally disables NTFS permissions inheritance and removes inherited permissions.
             #>
             [CmdletBinding()]

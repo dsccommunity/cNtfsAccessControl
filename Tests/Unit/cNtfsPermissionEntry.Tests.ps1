@@ -41,7 +41,7 @@ try
                 The Set-NewTempFileAcl function creates temporary files and performs the following actions on them:
                 - Disables NTFS permissions inheritance.
                 - Removes all permission entries.
-                - Grants Full Control permission to the calling user to ensure the file can be easily removed later.
+                - Grants Full Control permission to the calling user to ensure the file can be removed later.
                 - Optionally adds additional permission entries.
             #>
             [CmdletBinding()]
