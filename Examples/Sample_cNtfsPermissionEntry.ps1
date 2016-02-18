@@ -7,15 +7,21 @@
 
 Configuration Sample_cNtfsPermissionEntry
 {
+    param
+    (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [String]
+        $Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([System.Guid]::NewGuid().Guid))
+    )
+
     Import-DscResource -ModuleName cNtfsAccessControl
     Import-DscResource -ModuleName PSDesiredStateConfiguration
-
-    $TestDirectoryPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath 'TestDirectory'
 
     File TestDirectory
     {
         Ensure = 'Present'
-        DestinationPath = $TestDirectoryPath
+        DestinationPath = $Path
         Type = 'Directory'
     }
 
@@ -23,7 +29,7 @@ Configuration Sample_cNtfsPermissionEntry
     cNtfsPermissionEntry PermissionEntry1
     {
         Ensure = 'Present'
-        Path = $TestDirectoryPath
+        Path = $Path
         Principal = 'BUILTIN\Users'
         AccessControlInformation = @(
             cNtfsAccessControlInformation
@@ -41,7 +47,7 @@ Configuration Sample_cNtfsPermissionEntry
     cNtfsPermissionEntry PermissionEntry2
     {
         Ensure = 'Present'
-        Path = $TestDirectoryPath
+        Path = $Path
         Principal = 'BUILTIN\Administrators'
         AccessControlInformation = @(
             cNtfsAccessControlInformation
@@ -67,7 +73,7 @@ Configuration Sample_cNtfsPermissionEntry
     cNtfsPermissionEntry PermissionEntry3
     {
         Ensure = 'Absent'
-        Path = $TestDirectoryPath
+        Path = $Path
         Principal = 'NT AUTHORITY\Authenticated Users'
         DependsOn = '[File]TestDirectory'
     }

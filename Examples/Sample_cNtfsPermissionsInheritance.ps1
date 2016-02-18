@@ -7,22 +7,28 @@
 
 Configuration Sample_cNtfsPermissionsInheritance
 {
+    param
+    (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [String]
+        $Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([System.Guid]::NewGuid().Guid))
+    )
+
     Import-DscResource -ModuleName cNtfsAccessControl
     Import-DscResource -ModuleName PSDesiredStateConfiguration
-
-    $TestDirectoryPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath 'TestDirectory'
 
     File TestDirectory
     {
         Ensure = 'Present'
-        DestinationPath = $TestDirectoryPath
+        DestinationPath = $Path
         Type = 'Directory'
     }
 
     # Disable NTFS permissions inheritance.
     cNtfsPermissionsInheritance DisableInheritance
     {
-        Path = $TestDirectoryPath
+        Path = $Path
         Enabled = $false
         PreserveInherited = $true
         DependsOn = '[File]TestDirectory'
