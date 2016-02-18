@@ -47,11 +47,12 @@ The **cNtfsPermissionsInheritance** DSC resource provides a mechanism to manage 
 
 ## Versions
 
-### 1.2.0 (February 18, 2016)
+### 1.2.0 (February 19, 2016)
 
 * The **ItemType** property of the **cNtfsPermissionEntry** DSC resource was deprecated.
 * The **cNtfsPermissionsInheritance** DSC resource was added.
 * Unit and integration tests were added.
+* Bug fixes and general improvements.
 
 ### 1.1.1 (October 15, 2015)
 
