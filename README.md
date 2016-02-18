@@ -43,15 +43,15 @@ The **cNtfsPermissionsInheritance** DSC resource provides a mechanism to manage 
 * **Path**: Indicates the path to the target item.
 * **Enabled**: Indicates whether NTFS permissions inheritance is enabled. Set this property to `$false` to ensure it is disabled. The default value is `$true`.
 * **PreserveInherited**: Indicates whether to preserve inherited permissions. Set this property to `$true` to convert inherited permissions into explicit permissions.
- The default value is `$false`. This property is ignored if **Enabled** is set to `$true`.
+ The default value is `$false`. This property is only valid when **Enabled** is set to `$false`.
 
 ## Versions
 
-### Unreleased
+### 1.2.0 (February 18, 2016)
 
-* The **cNtfsPermissionsInheritance** resource was added.
-* The **ItemType** property was deprecated.
-* Integration and unit tests were added.
+* The **ItemType** property of the **cNtfsPermissionEntry** DSC resource was deprecated.
+* The **cNtfsPermissionsInheritance** DSC resource was added.
+* Unit and integration tests were added.
 
 ### 1.1.1 (October 15, 2015)
 
@@ -63,7 +63,7 @@ The **cNtfsPermissionsInheritance** DSC resource provides a mechanism to manage 
 
 ### 1.0.0 (September 29, 2015)
 
-* Initial release with the following resources:
+* Initial release with the following DSC resources:
   * **cNtfsPermissionEntry**
 
 ## Examples
@@ -88,7 +88,7 @@ Configuration Sample_cNtfsPermissionEntry
         Type = 'Directory'
     }
 
-    # Create a single permission entry for the local 'BUILTIN\Users' group.
+    # Create a single permission entry for the local 'Users' group.
     cNtfsPermissionEntry PermissionEntry1
     {
         Ensure = 'Present'
@@ -106,7 +106,7 @@ Configuration Sample_cNtfsPermissionEntry
         DependsOn = '[File]TestDirectory'
     }
 
-    # Create multiple permission entries for the 'BUILTIN\Administrators' group.
+    # Create multiple permission entries for the 'Administrators' group.
     cNtfsPermissionEntry PermissionEntry2
     {
         Ensure = 'Present'
@@ -132,7 +132,7 @@ Configuration Sample_cNtfsPermissionEntry
         DependsOn = '[File]TestDirectory'
     }
 
-    # Remove all explicit permissions for the 'NT AUTHORITY\Authenticated Users' group.
+    # Ensure that all explicit permissions associated with the 'Authenticated Users' group are removed.
     cNtfsPermissionEntry PermissionEntry3
     {
         Ensure = 'Absent'
@@ -142,6 +142,10 @@ Configuration Sample_cNtfsPermissionEntry
     }
 }
 
+$OutputPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath 'Sample_cNtfsPermissionEntry'
+Sample_cNtfsPermissionEntry -OutputPath $OutputPath
+Start-DscConfiguration -Path $OutputPath -Force -Verbose -Wait
+
 ```
 
 ### Disable NTFS permissions inheritance
@@ -149,6 +153,7 @@ Configuration Sample_cNtfsPermissionEntry
 This example shows how to use the **cNtfsPermissionsInheritance** DSC resource to disable NTFS permissions inheritance.
 
 ```powershell
+
 Configuration Sample_cNtfsPermissionsInheritance
 {
     Import-DscResource -ModuleName cNtfsAccessControl
@@ -163,7 +168,7 @@ Configuration Sample_cNtfsPermissionsInheritance
         Type = 'Directory'
     }
 
-    # Disable permissions inheritance.
+    # Disable NTFS permissions inheritance.
     cNtfsPermissionsInheritance DisableInheritance
     {
         Path = $TestDirectoryPath
@@ -172,5 +177,9 @@ Configuration Sample_cNtfsPermissionsInheritance
         DependsOn = '[File]TestDirectory'
     }
 }
+
+$OutputPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath 'Sample_cNtfsPermissionsInheritance'
+Sample_cNtfsPermissionsInheritance -OutputPath $OutputPath
+Start-DscConfiguration -Path $OutputPath -Force -Verbose -Wait
 
 ```
