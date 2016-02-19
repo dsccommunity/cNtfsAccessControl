@@ -41,7 +41,7 @@ function Get-TargetResource
 
     if ($PSBoundParameters.ContainsKey('ItemType'))
     {
-        Write-Verbose -Message 'The ItemType property is deprecated and should not be used.'
+        Write-Verbose -Message 'The ItemType property is deprecated and will be ignored.'
     }
 
     $Acl = Get-Acl -Path $Path -ErrorAction Stop
@@ -60,8 +60,7 @@ function Get-TargetResource
     [System.Security.AccessControl.FileSystemAccessRule[]]$AccessRules = @(
         $Acl.Access |
         Where-Object -FilterScript {
-            ($_.IsInherited -eq $false) -and
-            ($_.IdentityReference -eq $Identity.Name)
+            ($_.IsInherited -eq $false) -and ($_.IdentityReference -eq $Identity.Name)
         }
     )
 
@@ -308,8 +307,7 @@ function Set-TargetResource
     [System.Security.AccessControl.FileSystemAccessRule[]]$AccessRules = @(
         $Acl.Access |
         Where-Object -FilterScript {
-            ($_.IsInherited -eq $false) -and
-            ($_.IdentityReference -eq $Identity.Name)
+            ($_.IsInherited -eq $false) -and ($_.IdentityReference -eq $Identity.Name)
         }
     )
 
@@ -386,7 +384,7 @@ function Set-TargetResource
         }
     }
 
-    Set-FileSystemAccessControl -Path $Path -AclObject $Acl
+    Set-FileSystemAccessControl -Path $Path -Acl $Acl
 }
 
 #region Helper Functions
@@ -596,20 +594,20 @@ function Set-FileSystemAccessControl
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [System.Security.AccessControl.FileSystemSecurity]
-        $AclObject
+        $Acl
     )
 
     $PathInfo = Resolve-Path -Path $Path -ErrorAction Stop
 
     if ($PSCmdlet.ShouldProcess($Path))
     {
-        if ($AclObject -is [System.Security.AccessControl.DirectorySecurity])
+        if ($Acl -is [System.Security.AccessControl.DirectorySecurity])
         {
-            [System.IO.Directory]::SetAccessControl($PathInfo.ProviderPath, $AclObject)
+            [System.IO.Directory]::SetAccessControl($PathInfo.ProviderPath, $Acl)
         }
         else
         {
-            [System.IO.File]::SetAccessControl($PathInfo.ProviderPath, $AclObject)
+            [System.IO.File]::SetAccessControl($PathInfo.ProviderPath, $Acl)
         }
     }
 }

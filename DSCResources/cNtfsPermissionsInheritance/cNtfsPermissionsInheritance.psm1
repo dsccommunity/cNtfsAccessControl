@@ -128,7 +128,7 @@ function Set-TargetResource
         $Acl.SetAccessRuleProtection($false, $false)
     }
 
-    Set-FileSystemAccessControl -Path $Path -AclObject $Acl
+    Set-FileSystemAccessControl -Path $Path -Acl $Acl
 }
 
 #region Helper Functions
@@ -146,20 +146,20 @@ function Set-FileSystemAccessControl
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [System.Security.AccessControl.FileSystemSecurity]
-        $AclObject
+        $Acl
     )
 
     $PathInfo = Resolve-Path -Path $Path -ErrorAction Stop
 
     if ($PSCmdlet.ShouldProcess($Path))
     {
-        if ($AclObject -is [System.Security.AccessControl.DirectorySecurity])
+        if ($Acl -is [System.Security.AccessControl.DirectorySecurity])
         {
-            [System.IO.Directory]::SetAccessControl($PathInfo.ProviderPath, $AclObject)
+            [System.IO.Directory]::SetAccessControl($PathInfo.ProviderPath, $Acl)
         }
         else
         {
-            [System.IO.File]::SetAccessControl($PathInfo.ProviderPath, $AclObject)
+            [System.IO.File]::SetAccessControl($PathInfo.ProviderPath, $Acl)
         }
     }
 }

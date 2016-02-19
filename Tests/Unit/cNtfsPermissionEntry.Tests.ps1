@@ -1,6 +1,6 @@
 #requires -Version 4.0 -Modules CimCmdlets, Pester
 
-$Global:DSCModuleName   = 'cNtfsAccessControl'
+$Global:DSCModuleName = 'cNtfsAccessControl'
 $Global:DSCResourceName = 'cNtfsPermissionEntry'
 
 #region Header
@@ -114,19 +114,19 @@ try
 
                 $Result = Get-TargetResource @ContextParameters
 
-                It 'should return AccessControlInformation' {
+                It 'Should return AccessControlInformation' {
                     $Result.AccessControlInformation.Count | Should Be $ContextParameters.AccessControlInformation.Count
                 }
 
-                It 'should return Ensure' {
+                It 'Should return Ensure' {
                     $Result.Ensure -in @('Absent', 'Present') | Should Be $true
                 }
 
-                It 'should return Path' {
+                It 'Should return Path' {
                     $Result.Path | Should Be $ContextParameters.Path
                 }
 
-                It 'should return Principal' {
+                It 'Should return Principal' {
                     $Result.Principal | Should Be $ContextParameters.Principal
                 }
 
@@ -148,7 +148,7 @@ try
                         -ArgumentList $ContextParameters.Principal, 'ReadAndExecute', 'Allow'
                 )
 
-                It 'should return Ensure set Absent' {
+                It 'Should return Ensure set Absent' {
                     $Result = Get-TargetResource @ContextParameters
                     $Result.Ensure | Should Be 'Absent'
                 }
@@ -171,7 +171,7 @@ try
                         -ArgumentList $ContextParameters.Principal, 'Modify', 'Allow'
                 )
 
-                It 'should return Ensure set Present' {
+                It 'Should return Ensure set Present' {
                     $Result = Get-TargetResource @ContextParameters
                     $Result.Ensure | Should Be 'Present'
                 }
@@ -192,7 +192,7 @@ try
 
                 Set-NewTempFileAcl -Path $ContextParameters.Path
 
-                It 'should return True' {
+                It 'Should return True' {
                     Test-TargetResource @ContextParameters | Should Be $true
                 }
 
@@ -211,7 +211,7 @@ try
                         -ArgumentList $ContextParameters.Principal, 'Modify', 'Allow'
                 )
 
-                It 'should return False' {
+                It 'Should return False' {
                     Test-TargetResource @ContextParameters | Should Be $false
                 }
 
@@ -234,7 +234,7 @@ try
                         -ArgumentList $ContextParameters.Principal, 'Modify', 'Allow'
                 )
 
-                It 'should return True' {
+                It 'Should return True' {
                     Test-TargetResource @ContextParameters | Should Be $true
                 }
 
@@ -257,7 +257,7 @@ try
                         -ArgumentList $ContextParameters.Principal, 'ReadAndExecute', 'Allow'
                 )
 
-                It 'should return False' {
+                It 'Should return False' {
                     Test-TargetResource @ContextParameters | Should Be $false
                 }
 
@@ -280,7 +280,7 @@ try
                         -ArgumentList $ContextParameters.Principal, 'Modify', 'Allow'
                 )
 
-                It 'should remove permissions' {
+                It 'Should remove permissions' {
                     Test-TargetResource @ContextParameters | Should Be $false
                     Set-TargetResource @ContextParameters
                     Test-TargetResource @ContextParameters | Should Be $true
@@ -305,7 +305,7 @@ try
                         -ArgumentList $ContextParameters.Principal, 'ReadAndExecute', 'Allow'
                 )
 
-                It 'should add permissions' {
+                It 'Should add permissions' {
                     Test-TargetResource @ContextParameters | Should Be $false
                     Set-TargetResource @ContextParameters
                     Test-TargetResource @ContextParameters | Should Be $true
@@ -333,9 +333,9 @@ try
                     $DescribeParameters.AccessControlType
                 )
 
-                It 'should return NoPropagateInherit set to True' {
+                It 'Should return NoPropagateInherit set to True' {
                     $Result = ConvertFrom-FileSystemAccessRule -ItemType Directory -InputObject $AccessRule
-                    $Result.Inheritance        | Should Be 'ThisFolderSubfoldersAndFiles'
+                    $Result.Inheritance | Should Be 'ThisFolderSubfoldersAndFiles'
                     $Result.NoPropagateInherit | Should Be $true
                 }
 
@@ -351,15 +351,15 @@ try
                     $DescribeParameters.AccessControlType
                 )
 
-                It 'should return Inheritance set to ThisFolderOnly if ItemType is Directory' {
+                It 'Should return Inheritance set to ThisFolderOnly if ItemType is Directory' {
                     $Result = ConvertFrom-FileSystemAccessRule -ItemType Directory -InputObject $AccessRule
-                    $Result.Inheritance        | Should Be 'ThisFolderOnly'
+                    $Result.Inheritance | Should Be 'ThisFolderOnly'
                     $Result.NoPropagateInherit | Should Be $false
                 }
 
-                It 'should return Inheritance set to None if ItemType is File' {
+                It 'Should return Inheritance set to None if ItemType is File' {
                     $Result = ConvertFrom-FileSystemAccessRule -ItemType File -InputObject $AccessRule
-                    $Result.Inheritance        | Should Be 'None'
+                    $Result.Inheritance | Should Be 'None'
                     $Result.NoPropagateInherit | Should Be $false
                 }
 
@@ -375,9 +375,9 @@ try
                     $DescribeParameters.AccessControlType
                 )
 
-                It 'should return Inheritance set to ThisFolderSubfoldersAndFiles' {
+                It 'Should return Inheritance set to ThisFolderSubfoldersAndFiles' {
                     $Result = ConvertFrom-FileSystemAccessRule -ItemType Directory -InputObject $AccessRule
-                    $Result.Inheritance        | Should Be 'ThisFolderSubfoldersAndFiles'
+                    $Result.Inheritance | Should Be 'ThisFolderSubfoldersAndFiles'
                     $Result.NoPropagateInherit | Should Be $false
                 }
 
@@ -393,9 +393,9 @@ try
                     $DescribeParameters.AccessControlType
                 )
 
-                It 'should return Inheritance set to ThisFolderAndSubfolders' {
+                It 'Should return Inheritance set to ThisFolderAndSubfolders' {
                     $Result = ConvertFrom-FileSystemAccessRule -ItemType Directory -InputObject $AccessRule
-                    $Result.Inheritance        | Should Be 'ThisFolderAndSubfolders'
+                    $Result.Inheritance | Should Be 'ThisFolderAndSubfolders'
                     $Result.NoPropagateInherit | Should Be $false
                 }
 
@@ -411,9 +411,9 @@ try
                     $DescribeParameters.AccessControlType
                 )
 
-                It 'should return Inheritance set to ThisFolderAndFiles' {
+                It 'Should return Inheritance set to ThisFolderAndFiles' {
                     $Result = ConvertFrom-FileSystemAccessRule -ItemType Directory -InputObject $AccessRule
-                    $Result.Inheritance        | Should Be 'ThisFolderAndFiles'
+                    $Result.Inheritance | Should Be 'ThisFolderAndFiles'
                     $Result.NoPropagateInherit | Should Be $false
                 }
 
@@ -429,9 +429,9 @@ try
                     $DescribeParameters.AccessControlType
                 )
 
-                It 'should return Inheritance set to SubfoldersAndFilesOnly' {
+                It 'Should return Inheritance set to SubfoldersAndFilesOnly' {
                     $Result = ConvertFrom-FileSystemAccessRule -ItemType Directory -InputObject $AccessRule
-                    $Result.Inheritance        | Should Be 'SubfoldersAndFilesOnly'
+                    $Result.Inheritance | Should Be 'SubfoldersAndFilesOnly'
                     $Result.NoPropagateInherit | Should Be $false
                 }
 
@@ -447,9 +447,9 @@ try
                     $DescribeParameters.AccessControlType
                 )
 
-                It 'should return Inheritance set to SubfoldersOnly' {
+                It 'Should return Inheritance set to SubfoldersOnly' {
                     $Result = ConvertFrom-FileSystemAccessRule -ItemType Directory -InputObject $AccessRule
-                    $Result.Inheritance        | Should Be 'SubfoldersOnly'
+                    $Result.Inheritance | Should Be 'SubfoldersOnly'
                     $Result.NoPropagateInherit | Should Be $false
                 }
 
@@ -465,9 +465,9 @@ try
                     $DescribeParameters.AccessControlType
                 )
 
-                It 'should return Inheritance set to FilesOnly' {
+                It 'Should return Inheritance set to FilesOnly' {
                     $Result = ConvertFrom-FileSystemAccessRule -ItemType Directory -InputObject $AccessRule
-                    $Result.Inheritance        | Should Be 'FilesOnly'
+                    $Result.Inheritance | Should Be 'FilesOnly'
                     $Result.NoPropagateInherit | Should Be $false
                 }
 
@@ -485,14 +485,14 @@ try
 
             Context 'Expected behavior' {
 
-                It 'should return all the property values set correctly' {
+                It 'Should return all the property values set correctly' {
                     $Result = ConvertTo-FileSystemAccessRule @DescribeParameters -ItemType 'Directory' -Inheritance 'None' -NoPropagateInherit $false
-                    $Result.FileSystemRights  | Should Be ([System.Security.AccessControl.FileSystemRights]@($DescribeParameters.FileSystemRights, 'Synchronize'))
+                    $Result.FileSystemRights | Should Be ([System.Security.AccessControl.FileSystemRights]@($DescribeParameters.FileSystemRights, 'Synchronize'))
                     $Result.AccessControlType | Should Be $DescribeParameters.AccessControlType
                     $Result.IdentityReference | Should Be $DescribeParameters.Principal
-                    $Result.IsInherited       | Should Be $false
-                    $Result.InheritanceFlags  | Should Be 'None'
-                    $Result.PropagationFlags  | Should Be 'None'
+                    $Result.IsInherited | Should Be $false
+                    $Result.InheritanceFlags | Should Be 'None'
+                    $Result.PropagationFlags | Should Be 'None'
                 }
 
             }
@@ -623,7 +623,7 @@ try
 
             Context 'ItemType is File' {
 
-                It 'should ignore Inheritance and NoPropagateInherit' {
+                It 'Should ignore Inheritance and NoPropagateInherit' {
                     $Result = ConvertTo-FileSystemAccessRule @DescribeParameters -ItemType 'File' -Inheritance 'ThisFolderSubfoldersAndFiles' -NoPropagateInherit $true
                     $Result.InheritanceFlags | Should Be 'None'
                     $Result.PropagationFlags | Should Be 'None'
@@ -640,40 +640,40 @@ try
             $Acl = $File.GetAccessControl()
             $Acl.AddAccessRule((New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList 'BUILTIN\Users', 'FullControl', 'Allow'))
 
-            It 'should not throw' {
-                {Set-FileSystemAccessControl -Path $Path -AclObject $Acl} | Should Not Throw
+            It 'Should not throw' {
+                {Set-FileSystemAccessControl -Path $Path -Acl $Acl} | Should Not Throw
             }
 
-            It 'should throw if Path is invalid' {
+            It 'Should throw if Path is invalid' {
                 $Path = 'TestDrive:\' + [System.IO.Path]::GetRandomFileName()
-                {Set-FileSystemAccessControl -Path $Path -AclObject $Acl} | Should Throw
+                {Set-FileSystemAccessControl -Path $Path -Acl $Acl} | Should Throw
             }
 
-            It 'should throw if AclObject is invalid' {
-                {Set-FileSystemAccessControl -Path $Path -AclObject $null} | Should Throw
+            It 'Should throw if Acl is invalid' {
+                {Set-FileSystemAccessControl -Path $Path -Acl $null} | Should Throw
             }
 
         }
 
         Describe "$Global:DSCResourceName\Resolve-IdentityReference" {
 
-            It 'should resolve by SID' {
+            It 'Should resolve by SID' {
                 $Result = Resolve-IdentityReference -Identity 'S-1-5-32-545'
                 $Result.Name | Should Be 'BUILTIN\Users'
-                $Result.SID  | Should Be 'S-1-5-32-545'
+                $Result.SID | Should Be 'S-1-5-32-545'
             }
 
-            It 'should resolve by Name' {
+            It 'Should resolve by Name' {
                 $Result = Resolve-IdentityReference -Identity 'Users'
                 $Result.Name | Should Be 'BUILTIN\Users'
-                $Result.SID  | Should Be 'S-1-5-32-545'
+                $Result.SID | Should Be 'S-1-5-32-545'
             }
 
-            It 'should throw if Identity is invalid' {
+            It 'Should throw if Identity is invalid' {
                 {Resolve-IdentityReference -Identity $null} | Should Throw
             }
 
-            It 'should write a non-terminating error if Identity cannot be resolved' {
+            It 'Should write a non-terminating error if Identity cannot be resolved' {
                 Resolve-IdentityReference -Identity 'GFawkes' -ErrorAction SilentlyContinue -ErrorVariable ResultError
                 $ResultError.Count | Should Be 2
                 $ResultError[1].CategoryInfo.Activity | Should Be 'Write-Error'

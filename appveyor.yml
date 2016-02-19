@@ -3,15 +3,15 @@
 #---------------------------------#
 
 os: WMF 5
-version: 1.1.9.{build}
+version: 1.2.0.{build}
 install:
-  - cinst -y pester
-  - git clone https://github.com/PowerShell/DscResource.Tests
-  - ps: Push-Location
-  - cd DscResource.Tests
-  - ps: Import-Module -Name '.\TestHelper.psm1' -Force
-  - ps: Pop-Location
-  - ps: Get-PackageProvider -Name NuGet -ForceBootstrap -Force
+    - cinst -y pester
+    - git clone https://github.com/PowerShell/DscResource.Tests
+    - ps: Push-Location
+    - cd DscResource.Tests
+    - ps: Import-Module -Name '.\TestHelper.psm1' -Force
+    - ps: Pop-Location
+    - ps: Get-PackageProvider -Name NuGet -ForceBootstrap -Force
 
 #---------------------------------#
 #      build configuration        #
@@ -73,8 +73,11 @@ deploy_script:
         $NuGetPackagePath = (Get-Item -Path $NuGetPackageName).FullName
 
         # Push artifacts
-        @($ZipFilePath, $NuGetPackagePath) |
+        @(
+            $ZipFilePath
+            $NuGetPackagePath
+        ) |
         ForEach-Object -Process {
-            Write-Verbose -Message "Pushing package '$($_)' to AppVeyor artifacts" -Verbose
+            Write-Verbose -Message "Pushing package '$($_)' to AppVeyor artifacts." -Verbose
             Push-AppVeyorArtifact -Path $_
         }

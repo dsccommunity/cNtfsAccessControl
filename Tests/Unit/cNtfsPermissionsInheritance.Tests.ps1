@@ -1,6 +1,6 @@
 #requires -Version 4.0 -Modules Pester
 
-$Global:DSCModuleName   = 'cNtfsAccessControl'
+$Global:DSCModuleName = 'cNtfsAccessControl'
 $Global:DSCResourceName = 'cNtfsPermissionsInheritance'
 
 #region Header
@@ -30,7 +30,7 @@ try
 {
     #region Unit Tests
 
-    InModuleScope -ModuleName $DSCResourceName -ScriptBlock {
+    InModuleScope $Global:DSCResourceName {
 
         #region Helper Functions
 
@@ -100,7 +100,7 @@ try
                 $Path = 'TestDrive:\' + [System.IO.Path]::GetRandomFileName()
                 Set-NewTempFileAclInheritance -Path $Path -Enabled $true
 
-                It 'should return Enabled set to True' {
+                It 'Should return Enabled set to True' {
                     $Result = Get-TargetResource -Path $Path
                     $Result.Enabled | Should Be $true
                 }
@@ -112,7 +112,7 @@ try
                 $Path = 'TestDrive:\' + [System.IO.Path]::GetRandomFileName()
                 Set-NewTempFileAclInheritance -Path $Path -Enabled $false
 
-                It 'should return Enabled set to False' {
+                It 'Should return Enabled set to False' {
                     $Result = Get-TargetResource -Path $Path
                     $Result.Enabled | Should Be $false
                 }
@@ -128,11 +128,11 @@ try
                 $Path = 'TestDrive:\' + [System.IO.Path]::GetRandomFileName()
                 Set-NewTempFileAclInheritance -Path $Path -Enabled $true
 
-                It 'should return True if Enabled is True' {
+                It 'Should return True if Enabled is True' {
                     Test-TargetResource -Path $Path -Enabled $true | Should Be $true
                 }
 
-                It 'should return False if Enabled is False' {
+                It 'Should return False if Enabled is False' {
                     Test-TargetResource -Path $Path -Enabled $false | Should Be $false
                 }
 
@@ -143,11 +143,11 @@ try
                 $Path = 'TestDrive:\' + [System.IO.Path]::GetRandomFileName()
                 Set-NewTempFileAclInheritance -Path $Path -Enabled $false
 
-                It 'should return True if Enabled is False' {
+                It 'Should return True if Enabled is False' {
                     Test-TargetResource -Path $Path -Enabled $false | Should Be $true
                 }
 
-                It 'should return False if Enabled is True' {
+                It 'Should return False if Enabled is True' {
                     Test-TargetResource -Path $Path -Enabled $true | Should Be $false
                 }
 
@@ -162,7 +162,7 @@ try
                 $Path = 'TestDrive:\' + [System.IO.Path]::GetRandomFileName()
                 Set-NewTempFileAclInheritance -Path $Path -Enabled $false
 
-                it 'should enable inheritance' {
+                It 'Should enable inheritance' {
                     Test-TargetResource -Path $Path -Enabled $true | Should Be $false
                     Set-TargetResource -Path $Path -Enabled $true
                     Test-TargetResource -Path $Path -Enabled $true | Should Be $true
@@ -175,7 +175,7 @@ try
                 $Path = 'TestDrive:\' + [System.IO.Path]::GetRandomFileName()
                 $File = Set-NewTempFileAclInheritance -Path $Path -Enabled $true -PassThru
 
-                it 'should disable inheritance and convert inherited permissions into explicit permissions' {
+                It 'Should disable inheritance and convert inherited permissions into explicit permissions' {
 
                     $DaclBeforeSet = $File.GetAccessControl().Access
 
@@ -195,7 +195,7 @@ try
                 $Path = 'TestDrive:\' + [System.IO.Path]::GetRandomFileName()
                 $File = Set-NewTempFileAclInheritance -Path $Path -Enabled $true -PassThru
 
-                it 'should disable inheritance and remove inherited permissions' {
+                It 'Should disable inheritance and remove inherited permissions' {
 
                     $DaclBeforeSet = $File.GetAccessControl().Access
 
@@ -220,17 +220,17 @@ try
             $Acl = $File.GetAccessControl()
             $Acl.AddAccessRule((New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList 'BUILTIN\Users', 'FullControl', 'Allow'))
 
-            It 'should not throw' {
-                {Set-FileSystemAccessControl -Path $Path -AclObject $Acl} | Should Not Throw
+            It 'Should not throw' {
+                {Set-FileSystemAccessControl -Path $Path -Acl $Acl} | Should Not Throw
             }
 
-            It 'should throw if Path is invalid' {
+            It 'Should throw if Path is invalid' {
                 $Path = 'TestDrive:\' + [System.IO.Path]::GetRandomFileName()
-                {Set-FileSystemAccessControl -Path $Path -AclObject $Acl} | Should Throw
+                {Set-FileSystemAccessControl -Path $Path -Acl $Acl} | Should Throw
             }
 
-            It 'should throw if AclObject is invalid' {
-                {Set-FileSystemAccessControl -Path $Path -AclObject $null} | Should Throw
+            It 'Should throw if Acl is invalid' {
+                {Set-FileSystemAccessControl -Path $Path -Acl $null} | Should Throw
             }
 
         }

@@ -1,6 +1,6 @@
 #requires -Version 4.0 -Modules Pester
 
-$Global:DSCModuleName   = 'cNtfsAccessControl'
+$Global:DSCModuleName = 'cNtfsAccessControl'
 $Global:DSCResourceName = 'cNtfsPermissionsInheritance'
 
 #region Header
@@ -46,14 +46,14 @@ try
 
         $ConfigurationName = "$($Global:DSCResourceName)_Config"
 
-        It 'should compile without throwing' {
+        It 'Should compile without throwing' {
             {
                 Invoke-Expression -Command ('{0} -OutputPath "{1}"' -f $ConfigurationName, $TestEnvironment.WorkingFolder)
                 Start-DscConfiguration -Path $TestEnvironment.WorkingFolder -ComputerName localhost -Force -Verbose -Wait
             } | Should Not Throw
         }
 
-        It 'should be able to call Get-DscConfiguration without throwing' {
+        It 'Should be able to call Get-DscConfiguration without throwing' {
             {
                 Get-DscConfiguration -Verbose -ErrorAction Stop
             } | Should Not Throw
@@ -61,10 +61,10 @@ try
 
         #endregion
 
-        It 'should have set the resource and all the parameters should match' {
+        It 'Should have set the resource and all the parameters should match' {
             $Current = Get-DscConfiguration | Where-Object {$_.ConfigurationName -eq $ConfigurationName}
-            $Current.Path              | Should Be $TestParameters.Path
-            $Current.Enabled           | Should Be $TestParameters.Enabled
+            $Current.Path | Should Be $TestParameters.Path
+            $Current.Enabled | Should Be $TestParameters.Enabled
             $Current.PreserveInherited | Should Be $TestParameters.PreserveInherited
         }
 

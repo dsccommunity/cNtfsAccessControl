@@ -12,7 +12,9 @@ You can also download this module from the [PowerShell Gallery](https://www.powe
 
 The **cNtfsPermissionEntry** DSC resource provides a mechanism to manage NTFS permissions.
 
-* **Ensure**: Indicates if the permission entry exists. Set this property to `Absent` to ensure that all explicit permissions associated with the specified principal are removed. The default value is `Present`.
+* **Ensure**: Indicates if the principal has explicitly assigned permissions on the target path.
+    Set this property to `Present` (the default value) to ensure they exactly match what is provided through the **AccessControlInformation** property.
+    Set this property to `Absent` to ensure that all explicit permissions associated with the specified principal are removed.
 * **Path**: Indicates the path to the target item.
 * **Principal**: Indicates the identity of the principal. Valid formats are:
     * [Down-Level Logon Name](https://msdn.microsoft.com/en-us/library/windows/desktop/aa380525%28v=vs.85%29.aspx#down_level_logon_name)
@@ -22,8 +24,8 @@ The **cNtfsPermissionEntry** DSC resource provides a mechanism to manage NTFS pe
 * **AccessControlInformation**: Indicates the access control information in the form of an array of instances of the **cNtfsAccessControlInformation** CIM class. Its properties are as follows:
     * **AccessControlType**: Indicates whether to `Allow` or `Deny` access to the target item. The default value is `Allow`.
     * **FileSystemRights**: Indicates the access rights to be granted to the principal.
-     Specify one or more values from the [System.Security.AccessControl.FileSystemRights](https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.filesystemrights%28v=vs.110%29.aspx) enumeration type.
-     Multiple values can be specified by using an array of strings or a single comma-separated string. The default value is `ReadAndExecute`.
+        Specify one or more values from the [System.Security.AccessControl.FileSystemRights](https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.filesystemrights%28v=vs.110%29.aspx) enumeration type.
+        Multiple values can be specified by using an array of strings or a single comma-separated string. The default value is `ReadAndExecute`.
     * **Inheritance**: Indicates the inheritance type of the permission entry. This property is only applicable to directories. Valid values are:
         * `None`
         * `ThisFolderOnly`
@@ -34,7 +36,7 @@ The **cNtfsPermissionEntry** DSC resource provides a mechanism to manage NTFS pe
         * `SubfoldersOnly`
         * `FilesOnly`
     * **NoPropagateInherit**: Indicates whether the permission entry is not propagated to child objects. This property is only applicable to directories.
-     Set this property to `$true` to ensure inheritance is limited only to those sub-objects that are immediately subordinate to the target item. The default value is `$false`.
+        Set this property to `$true` to ensure inheritance is limited only to those sub-objects that are immediately subordinate to the target item. The default value is `$false`.
 
 ### cNtfsPermissionsInheritance
 
@@ -43,7 +45,7 @@ The **cNtfsPermissionsInheritance** DSC resource provides a mechanism to manage 
 * **Path**: Indicates the path to the target item.
 * **Enabled**: Indicates whether NTFS permissions inheritance is enabled. Set this property to `$false` to ensure it is disabled. The default value is `$true`.
 * **PreserveInherited**: Indicates whether to preserve inherited permissions. Set this property to `$true` to convert inherited permissions into explicit permissions.
- The default value is `$false`. This property is only valid when **Enabled** is set to `$false`.
+    The default value is `$false`. This property is only valid when the **Enabled** property is set to `$false`.
 
 ## Versions
 
@@ -65,7 +67,7 @@ The **cNtfsPermissionsInheritance** DSC resource provides a mechanism to manage 
 ### 1.0.0 (September 29, 2015)
 
 * Initial release with the following DSC resources:
-  * **cNtfsPermissionEntry**
+    * **cNtfsPermissionEntry**
 
 ## Examples
 
@@ -95,8 +97,8 @@ Configuration Sample_cNtfsPermissionEntry
         Type = 'Directory'
     }
 
-    # Create a single permission entry for the local 'Users' group.
-    cNtfsPermissionEntry PermissionEntry1
+    # Ensure that a single permission entry is assigned to the local 'Users' group.
+    cNtfsPermissionEntry PermissionSet1
     {
         Ensure = 'Present'
         Path = $Path
@@ -113,8 +115,8 @@ Configuration Sample_cNtfsPermissionEntry
         DependsOn = '[File]TestDirectory'
     }
 
-    # Create multiple permission entries for the 'Administrators' group.
-    cNtfsPermissionEntry PermissionEntry2
+    # Ensure that multiple permission entries are assigned to the local 'Administrators' group.
+    cNtfsPermissionEntry PermissionSet2
     {
         Ensure = 'Present'
         Path = $Path
@@ -140,7 +142,7 @@ Configuration Sample_cNtfsPermissionEntry
     }
 
     # Ensure that all explicit permissions associated with the 'Authenticated Users' group are removed.
-    cNtfsPermissionEntry PermissionEntry3
+    cNtfsPermissionEntry PermissionSet3
     {
         Ensure = 'Absent'
         Path = $Path

@@ -10,7 +10,7 @@ Configuration cNtfsPermissionEntry_Config
 
     Node localhost
     {
-        cNtfsPermissionEntry Test1
+        cNtfsPermissionEntry Test
         {
             Ensure = $TestParameters.Ensure
             Path = $TestParameters.Path
@@ -23,6 +23,7 @@ Configuration cNtfsPermissionEntry_Config
                     Inheritance = 'ThisFolderOnly'
                     NoPropagateInherit = $false
                 }
+
                 cNtfsAccessControlInformation
                 {
                     AccessControlType = 'Allow'
@@ -30,6 +31,7 @@ Configuration cNtfsPermissionEntry_Config
                     Inheritance = 'ThisFolderSubfoldersAndFiles'
                     NoPropagateInherit = $false
                 }
+
                 cNtfsAccessControlInformation
                 {
                     AccessControlType = 'Allow'

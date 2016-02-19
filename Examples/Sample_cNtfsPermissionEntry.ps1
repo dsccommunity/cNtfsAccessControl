@@ -25,8 +25,8 @@ Configuration Sample_cNtfsPermissionEntry
         Type = 'Directory'
     }
 
-    # Create a single permission entry for the local 'Users' group.
-    cNtfsPermissionEntry PermissionEntry1
+    # Ensure that a single permission entry is assigned to the local 'Users' group.
+    cNtfsPermissionEntry PermissionSet1
     {
         Ensure = 'Present'
         Path = $Path
@@ -43,8 +43,8 @@ Configuration Sample_cNtfsPermissionEntry
         DependsOn = '[File]TestDirectory'
     }
 
-    # Create multiple permission entries for the 'Administrators' group.
-    cNtfsPermissionEntry PermissionEntry2
+    # Ensure that multiple permission entries are assigned to the local 'Administrators' group.
+    cNtfsPermissionEntry PermissionSet2
     {
         Ensure = 'Present'
         Path = $Path
@@ -70,7 +70,7 @@ Configuration Sample_cNtfsPermissionEntry
     }
 
     # Ensure that all explicit permissions associated with the 'Authenticated Users' group are removed.
-    cNtfsPermissionEntry PermissionEntry3
+    cNtfsPermissionEntry PermissionSet3
     {
         Ensure = 'Absent'
         Path = $Path

@@ -10,7 +10,7 @@ Configuration cNtfsPermissionsInheritance_Config
 
     Node localhost
     {
-        cNtfsPermissionsInheritance Test1
+        cNtfsPermissionsInheritance Test
         {
             Path = $TestParameters.Path
             Enabled = $TestParameters.Enabled

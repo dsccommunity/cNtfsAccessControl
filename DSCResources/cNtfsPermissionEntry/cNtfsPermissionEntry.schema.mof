@@ -10,7 +10,7 @@ class cNtfsAccessControlInformation
 [ClassVersion("1.1.0.0"), FriendlyName("cNtfsPermissionEntry")]
 class cNtfsPermissionEntry : OMI_BaseResource
 {
-    [Write, Description("Indicates if the permission entry exists."), ValueMap{"Absent","Present"}, Values{"Absent","Present"}] String Ensure;
+    [Write, Description("Indicates if the principal has explicitly assigned permissions on the target path."), ValueMap{"Absent","Present"}, Values{"Absent","Present"}] String Ensure;
     [Key, Description("Indicates the path to the target item.")] String Path;
     [Write, Description("Obsolete. Indicates whether the target item is a Directory or a File."), ValueMap{"Directory","File"}, Values{"Directory","File"}] String ItemType;
     [Key, Description("Indicates the identity of the principal.")] String Principal;
