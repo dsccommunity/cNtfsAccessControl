@@ -1,6 +1,8 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/olfva3iu8lcehhf1?svg=true)](https://ci.appveyor.com/project/SNikalaichyk/cNtfsAccessControl)
+
 # cNtfsAccessControl
 
-The **cNtfsAccessControl** module contains the **cNtfsPermissionEntry** DSC resource that provides a mechanism to manage NTFS permission entries.
+The **cNtfsAccessControl** module contains DSC resources for NTFS access control management.
 
 You can also download this module from the [PowerShell Gallery](https://www.powershellgallery.com/packages/cNtfsAccessControl/).
 
@@ -8,37 +10,51 @@ You can also download this module from the [PowerShell Gallery](https://www.powe
 
 ### cNtfsPermissionEntry
 
-* **Ensure**: Indicates if the permission entry exists. The default value is `Present`. Set this property to `Absent` to ensure that any explicit access rights the principal has are revoked.
+The **cNtfsPermissionEntry** DSC resource provides a mechanism to manage NTFS permissions.
+
+* **Ensure**: Indicates if the principal has explicitly assigned permissions on the target path.
+    Set this property to `Present` (the default value) to ensure they exactly match what is provided through the **AccessControlInformation** property.
+    Set this property to `Absent` to ensure that all explicit permissions associated with the specified principal are removed.
 * **Path**: Indicates the path to the target item.
-* **ItemType**: Indicates whether the target item is a `Directory` or a `File`.
-* **Principal**: Indicates the identity of the principal. Valid name formats: Down-Level Logon Name; User Principal Name; sAMAccountName; Security Identifier.
-* **AccessControlInformation**: Indicates the collection of instances of the custom **cNtfsAccessControlInformation** CIM class that implements the following properties:
-  * **AccessControlType**: Indicates whether to allow or deny access to the target item.
-  * **FileSystemRights**: Indicates the access rights to be granted to the principal. Specify one or more values from the [System.Security.AccessControl.FileSystemRights](https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.filesystemrights%28v=vs.110%29.aspx) enumeration type. Multiple values can be specified by using a comma-separated string.
-  * **Inheritance**: Apply to. This property is only valid when the **ItemType** property is set to `Directory`.
-    Valid values:
-    - `None`
-    - `ThisFolderOnly`
-    - `ThisFolderSubfoldersAndFiles`
-    - `ThisFolderAndSubfolders`
-    - `ThisFolderAndFiles`
-    - `SubfoldersAndFilesOnly`
-    - `SubfoldersOnly`
-    - `FilesOnly`
-  * **NoPropagateInherit**: Only apply these permissions to objects and/or containers within this container. This property is only valid when the **ItemType** property is set to `Directory`.
+* **Principal**: Indicates the identity of the principal. Valid formats are:
+    * [Down-Level Logon Name](https://msdn.microsoft.com/en-us/library/windows/desktop/aa380525%28v=vs.85%29.aspx#down_level_logon_name)
+    * [Security Accounts Manager (SAM) Account Name (sAMAccountName)](https://msdn.microsoft.com/en-us/library/windows/desktop/ms679635%28v=vs.85%29.aspx)
+    * [Security Identifier (SID)](https://msdn.microsoft.com/en-us/library/cc246018.aspx)
+    * [User Principal Name (UPN)](https://msdn.microsoft.com/en-us/library/windows/desktop/aa380525%28v=vs.85%29.aspx#user_principal_name)
+* **AccessControlInformation**: Indicates the access control information in the form of an array of instances of the **cNtfsAccessControlInformation** CIM class. Its properties are as follows:
+    * **AccessControlType**: Indicates whether to `Allow` or `Deny` access to the target item. The default value is `Allow`.
+    * **FileSystemRights**: Indicates the access rights to be granted to the principal.
+        Specify one or more values from the [System.Security.AccessControl.FileSystemRights](https://msdn.microsoft.com/en-us/library/system.security.accesscontrol.filesystemrights%28v=vs.110%29.aspx) enumeration type.
+        Multiple values can be specified by using an array of strings or a single comma-separated string. The default value is `ReadAndExecute`.
+    * **Inheritance**: Indicates the inheritance type of the permission entry. This property is only applicable to directories. Valid values are:
+        * `None`
+        * `ThisFolderOnly`
+        * `ThisFolderSubfoldersAndFiles` (the default value)
+        * `ThisFolderAndSubfolders`
+        * `ThisFolderAndFiles`
+        * `SubfoldersAndFilesOnly`
+        * `SubfoldersOnly`
+        * `FilesOnly`
+    * **NoPropagateInherit**: Indicates whether the permission entry is not propagated to child objects. This property is only applicable to directories.
+        Set this property to `$true` to ensure inheritance is limited only to those sub-objects that are immediately subordinate to the target item. The default value is `$false`.
 
-> **Note:**
-> If the **Ensure** property is set to `Present` and the **AccessControlInformation** property is not specified, the default permission entry will be used as the reference entry.
-Default permission entry: "Allow | Read & Execute | This folder, subfolders and files (Directory) / None (File)".
+### cNtfsPermissionsInheritance
 
-> **Note:**
-> If the **Ensure** property is set to `Absent`, the **AccessControlInformation** property will be ignored.
+The **cNtfsPermissionsInheritance** DSC resource provides a mechanism to manage NTFS permissions inheritance.
 
-> **Note:**
-> If you want to assign multiple permission entries for a principal, it is strongly recommended to test them in advance to make sure they are not merging.
-In such cases the **Test-TargetResource** function will always return `$false` (i.e. resource is not in the desired state), and permissions will be reapplied every time DSC Consistency Check is executed.
+* **Path**: Indicates the path to the target item.
+* **Enabled**: Indicates whether NTFS permissions inheritance is enabled. Set this property to `$false` to ensure it is disabled. The default value is `$true`.
+* **PreserveInherited**: Indicates whether to preserve inherited permissions. Set this property to `$true` to convert inherited permissions into explicit permissions.
+    The default value is `$false`. This property is only valid when the **Enabled** property is set to `$false`.
 
 ## Versions
+
+### 1.2.0 (February 19, 2016)
+
+* The **ItemType** property of the **cNtfsPermissionEntry** DSC resource was deprecated.
+* The **cNtfsPermissionsInheritance** DSC resource was added.
+* Unit and integration tests were added.
+* Bug fixes and general improvements.
 
 ### 1.1.1 (October 15, 2015)
 
@@ -50,81 +66,44 @@ In such cases the **Test-TargetResource** function will always return `$false` (
 
 ### 1.0.0 (September 29, 2015)
 
-* Initial release with the following resources:
-  - **cNtfsPermissionEntry**.
+* Initial release with the following DSC resources:
+    * **cNtfsPermissionEntry**
 
 ## Examples
 
-This configuration will create a directory and a file, and assign NTFS permissions on them.
+### Assign NTFS permissions
+
+This example shows how to use the **cNtfsPermissionEntry** DSC resource to assign NTFS permissions.
 
 ```powershell
 
-configuration Sample_cNtfsPermissionEntry
+Configuration Sample_cNtfsPermissionEntry
 {
-    Import-DscResource -ModuleName PSDesiredStateConfiguration
+    param
+    (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [String]
+        $Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([System.Guid]::NewGuid().Guid))
+    )
+
     Import-DscResource -ModuleName cNtfsAccessControl
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
 
     File TestDirectory
     {
         Ensure = 'Present'
-        DestinationPath = 'C:\TestDirectory'
+        DestinationPath = $Path
         Type = 'Directory'
     }
 
-    File TestFile
+    # Ensure that a single permission entry is assigned to the local 'Users' group.
+    cNtfsPermissionEntry PermissionSet1
     {
         Ensure = 'Present'
-        DestinationPath = 'C:\TestDirectory\TestFile.txt'
-        Type = 'File'
-        Contents = ''
-        DependsOn = '[File]TestDirectory'
-    }
-
-    # EXAMPLE 1: Add a single permission entry for a principal.
-    # NOTE: If you do not specify the AccessControlInformation property, the default permission entry will be used as the reference entry.
-    cNtfsPermissionEntry PermissionEntry1
-    {
-        Ensure = 'Present'
-        Path = 'C:\TestDirectory'
-        ItemType = 'Directory'
-        Principal = $Env:UserDomain, $Env:UserName -join '\'
-        DependsOn = '[File]TestDirectory'
-    }
-
-    # EXAMPLE 2: Add a single permission for a principal.
-    cNtfsPermissionEntry PermissionEntry2
-    {
-        Ensure = 'Present'
-        Path = 'C:\TestDirectory\TestFile.txt'
-        ItemType = 'File'
+        Path = $Path
         Principal = 'BUILTIN\Users'
-        AccessControlInformation =
-        @(
-            cNtfsAccessControlInformation
-            {
-                AccessControlType = 'Allow'
-                FileSystemRights = 'Modify'
-            }
-        )
-        DependsOn = '[File]TestFile'
-    }
-
-    # EXAMPLE 3: Add multiple permission entries for a principal.
-    cNtfsPermissionEntry PermissionEntry3
-    {
-        Ensure = 'Present'
-        Path = 'C:\TestDirectory'
-        ItemType = 'Directory'
-        Principal = 'BUILTIN\Administrators'
-        AccessControlInformation =
-        @(
-            cNtfsAccessControlInformation
-            {
-                AccessControlType = 'Allow'
-                FileSystemRights = 'Modify'
-                Inheritance = 'ThisFolderOnly'
-                NoPropagateInherit = $false
-            }
+        AccessControlInformation = @(
             cNtfsAccessControlInformation
             {
                 AccessControlType = 'Allow'
@@ -132,36 +111,90 @@ configuration Sample_cNtfsPermissionEntry
                 Inheritance = 'ThisFolderSubfoldersAndFiles'
                 NoPropagateInherit = $false
             }
+        )
+        DependsOn = '[File]TestDirectory'
+    }
+
+    # Ensure that multiple permission entries are assigned to the local 'Administrators' group.
+    cNtfsPermissionEntry PermissionSet2
+    {
+        Ensure = 'Present'
+        Path = $Path
+        Principal = 'BUILTIN\Administrators'
+        AccessControlInformation = @(
             cNtfsAccessControlInformation
             {
-                AccessControlType = 'Allow'
+                FileSystemRights = 'Modify'
+                Inheritance = 'ThisFolderOnly'
+            }
+            cNtfsAccessControlInformation
+            {
+                FileSystemRights = 'ReadAndExecute'
+                Inheritance = 'ThisFolderSubfoldersAndFiles'
+            }
+            cNtfsAccessControlInformation
+            {
                 FileSystemRights = 'AppendData', 'CreateFiles'
                 Inheritance = 'SubfoldersAndFilesOnly'
-                NoPropagateInherit = $false
             }
         )
         DependsOn = '[File]TestDirectory'
     }
 
-    # EXAMPLE 4: Remove all of the non-inherited permission entries for a principal.
-    # NOTE: In case the AccessControlInformation property is specified, it will be ignored.
-    cNtfsPermissionEntry PermissionEntry4
+    # Ensure that all explicit permissions associated with the 'Authenticated Users' group are removed.
+    cNtfsPermissionEntry PermissionSet3
     {
         Ensure = 'Absent'
-        Path = 'C:\TestDirectory'
-        ItemType = 'Directory'
-        Principal = 'BUILTIN\Users'
+        Path = $Path
+        Principal = 'NT AUTHORITY\Authenticated Users'
         DependsOn = '[File]TestDirectory'
     }
-
 }
 
-Sample_cNtfsPermissionEntry -OutputPath "$Env:SystemDrive\Sample_cNtfsPermissionEntry"
-
-Start-DscConfiguration -Path "$Env:SystemDrive\Sample_cNtfsPermissionEntry" -Force -Verbose -Wait
-
-Get-DscConfiguration
-
+$OutputPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath 'Sample_cNtfsPermissionEntry'
+Sample_cNtfsPermissionEntry -OutputPath $OutputPath
+Start-DscConfiguration -Path $OutputPath -Force -Verbose -Wait
 
 ```
 
+### Disable NTFS permissions inheritance
+
+This example shows how to use the **cNtfsPermissionsInheritance** DSC resource to disable NTFS permissions inheritance.
+
+```powershell
+
+Configuration Sample_cNtfsPermissionsInheritance
+{
+    param
+    (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [String]
+        $Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([System.Guid]::NewGuid().Guid))
+    )
+
+    Import-DscResource -ModuleName cNtfsAccessControl
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
+
+    File TestDirectory
+    {
+        Ensure = 'Present'
+        DestinationPath = $Path
+        Type = 'Directory'
+    }
+
+    # Disable NTFS permissions inheritance.
+    cNtfsPermissionsInheritance DisableInheritance
+    {
+        Path = $Path
+        Enabled = $false
+        PreserveInherited = $true
+        DependsOn = '[File]TestDirectory'
+    }
+}
+
+$OutputPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath 'Sample_cNtfsPermissionsInheritance'
+Sample_cNtfsPermissionsInheritance -OutputPath $OutputPath
+Start-DscConfiguration -Path $OutputPath -Force -Verbose -Wait
+
+```

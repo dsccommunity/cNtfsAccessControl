@@ -1,70 +1,37 @@
-﻿
-configuration Sample_cNtfsPermissionEntry
+<#
+.SYNOPSIS
+    Assign NTFS permissions.
+.DESCRIPTION
+    This example shows how to use the cNtfsPermissionEntry DSC resource to assign NTFS permissions.
+#>
+
+Configuration Sample_cNtfsPermissionEntry
 {
-    Import-DscResource -ModuleName PSDesiredStateConfiguration
+    param
+    (
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [String]
+        $Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([System.Guid]::NewGuid().Guid))
+    )
+
     Import-DscResource -ModuleName cNtfsAccessControl
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
 
     File TestDirectory
     {
         Ensure = 'Present'
-        DestinationPath = 'C:\TestDirectory'
+        DestinationPath = $Path
         Type = 'Directory'
     }
 
-    File TestFile
+    # Ensure that a single permission entry is assigned to the local 'Users' group.
+    cNtfsPermissionEntry PermissionSet1
     {
         Ensure = 'Present'
-        DestinationPath = 'C:\TestDirectory\TestFile.txt'
-        Type = 'File'
-        Contents = ''
-        DependsOn = '[File]TestDirectory'
-    }
-
-    # EXAMPLE 1: Add a single permission entry for a principal.
-    # NOTE: If you do not specify the AccessControlInformation property, the default permission entry will be used as the reference entry.
-    cNtfsPermissionEntry PermissionEntry1
-    {
-        Ensure = 'Present'
-        Path = 'C:\TestDirectory'
-        ItemType = 'Directory'
-        Principal = $Env:UserDomain, $Env:UserName -join '\'
-        DependsOn = '[File]TestDirectory'
-    }
-
-    # EXAMPLE 2: Add a single permission for a principal.
-    cNtfsPermissionEntry PermissionEntry2
-    {
-        Ensure = 'Present'
-        Path = 'C:\TestDirectory\TestFile.txt'
-        ItemType = 'File'
+        Path = $Path
         Principal = 'BUILTIN\Users'
-        AccessControlInformation =
-        @(
-            cNtfsAccessControlInformation
-            {
-                AccessControlType = 'Allow'
-                FileSystemRights = 'Modify'
-            }
-        )
-        DependsOn = '[File]TestFile'
-    }
-
-    # EXAMPLE 3: Add multiple permission entries for a principal.
-    cNtfsPermissionEntry PermissionEntry3
-    {
-        Ensure = 'Present'
-        Path = 'C:\TestDirectory'
-        ItemType = 'Directory'
-        Principal = 'BUILTIN\Administrators'
-        AccessControlInformation =
-        @(
-            cNtfsAccessControlInformation
-            {
-                AccessControlType = 'Allow'
-                FileSystemRights = 'Modify'
-                Inheritance = 'ThisFolderOnly'
-                NoPropagateInherit = $false
-            }
+        AccessControlInformation = @(
             cNtfsAccessControlInformation
             {
                 AccessControlType = 'Allow'
@@ -72,33 +39,46 @@ configuration Sample_cNtfsPermissionEntry
                 Inheritance = 'ThisFolderSubfoldersAndFiles'
                 NoPropagateInherit = $false
             }
+        )
+        DependsOn = '[File]TestDirectory'
+    }
+
+    # Ensure that multiple permission entries are assigned to the local 'Administrators' group.
+    cNtfsPermissionEntry PermissionSet2
+    {
+        Ensure = 'Present'
+        Path = $Path
+        Principal = 'BUILTIN\Administrators'
+        AccessControlInformation = @(
             cNtfsAccessControlInformation
             {
-                AccessControlType = 'Allow'
+                FileSystemRights = 'Modify'
+                Inheritance = 'ThisFolderOnly'
+            }
+            cNtfsAccessControlInformation
+            {
+                FileSystemRights = 'ReadAndExecute'
+                Inheritance = 'ThisFolderSubfoldersAndFiles'
+            }
+            cNtfsAccessControlInformation
+            {
                 FileSystemRights = 'AppendData', 'CreateFiles'
                 Inheritance = 'SubfoldersAndFilesOnly'
-                NoPropagateInherit = $false
             }
         )
         DependsOn = '[File]TestDirectory'
     }
 
-    # EXAMPLE 4: Remove all of the non-inherited permission entries for a principal.
-    # NOTE: In case the AccessControlInformation property is specified, it will be ignored.
-    cNtfsPermissionEntry PermissionEntry4
+    # Ensure that all explicit permissions associated with the 'Authenticated Users' group are removed.
+    cNtfsPermissionEntry PermissionSet3
     {
         Ensure = 'Absent'
-        Path = 'C:\TestDirectory'
-        ItemType = 'Directory'
-        Principal = 'BUILTIN\Users'
+        Path = $Path
+        Principal = 'NT AUTHORITY\Authenticated Users'
         DependsOn = '[File]TestDirectory'
     }
-
 }
 
-Sample_cNtfsPermissionEntry -OutputPath "$Env:SystemDrive\Sample_cNtfsPermissionEntry"
-
-Start-DscConfiguration -Path "$Env:SystemDrive\Sample_cNtfsPermissionEntry" -Force -Verbose -Wait
-
-Get-DscConfiguration
-
+$OutputPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath 'Sample_cNtfsPermissionEntry'
+Sample_cNtfsPermissionEntry -OutputPath $OutputPath
+Start-DscConfiguration -Path $OutputPath -Force -Verbose -Wait
