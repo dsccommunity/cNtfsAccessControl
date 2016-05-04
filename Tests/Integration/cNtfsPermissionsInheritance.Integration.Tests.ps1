@@ -1,6 +1,6 @@
 #requires -Version 4.0 -Modules Pester
 
-$Global:DSCModuleName = 'cNtfsAccessControl'
+$Global:DSCModuleName   = 'cNtfsAccessControl'
 $Global:DSCResourceName = 'cNtfsPermissionsInheritance'
 
 #region Header
@@ -14,29 +14,30 @@ if (
 {
     & git @('clone', 'https://github.com/PowerShell/DscResource.Tests.git', (Join-Path -Path $ModuleRoot -ChildPath 'DSCResource.Tests'))
 }
-else
-{
-    & git @('-C', (Join-Path -Path $ModuleRoot -ChildPath 'DSCResource.Tests'), 'pull')
-}
 
 Import-Module -Name (Join-Path -Path $ModuleRoot -ChildPath 'DSCResource.Tests\TestHelper.psm1') -Force
 
-$TestEnvironment = Initialize-TestEnvironment -DSCModuleName $Global:DSCModuleName -DSCResourceName $Global:DSCResourceName -TestType Integration
+$TestEnvironment = Initialize-TestEnvironment `
+    -DSCModuleName $Global:DSCModuleName `
+    -DSCResourceName $Global:DSCResourceName `
+    -TestType Integration
 
 #endregion
 
-# Begin Testing
 try
 {
     $ConfigFile = Join-Path -Path $PSScriptRoot -ChildPath "$($Global:DSCResourceName).Config.ps1"
     . $ConfigFile
 
-    # Create a new temporary directory
+    #region Create temporary directory
+
     $TestDirectory = New-Item -Path $TestParameters.Path -ItemType Directory -Force -Verbose
     $Acl = $TestDirectory.GetAccessControl()
     $Acl.SetAccessRuleProtection($false, $false)
     $Acl.Access.Where({-not $_.IsInherited}).ForEach({[Void]$Acl.RemoveAccessRule($_)})
     [System.IO.Directory]::SetAccessControl($TestDirectory.FullName, $Acl)
+
+    #endregion
 
     #region Integration Tests
 
@@ -62,10 +63,18 @@ try
         #endregion
 
         It 'Should have set the resource and all the parameters should match' {
-            $Current = Get-DscConfiguration | Where-Object {$_.ConfigurationName -eq $ConfigurationName}
-            $Current.Path | Should Be $TestParameters.Path
-            $Current.Enabled | Should Be $TestParameters.Enabled
-            $Current.PreserveInherited | Should Be $TestParameters.PreserveInherited
+
+            $CurrentConfiguration = Get-DscConfiguration |
+                Where-Object -FilterScript {$_.ConfigurationName -eq $ConfigurationName}
+
+            $CurrentConfiguration.Path              | Should Be $TestParameters.Path
+            $CurrentConfiguration.Enabled           | Should Be $TestParameters.Enabled
+            $CurrentConfiguration.PreserveInherited | Should Be $TestParameters.PreserveInherited
+
+        }
+
+        It 'Actual configuration should match the desired configuration' {
+            Test-DscConfiguration -Verbose | Should Be $true
         }
 
     }
@@ -80,6 +89,7 @@ finally
 
     #endregion
 
+    # Remove temporary directory
     if ($TestDirectory)
     {
         Remove-Item -Path $TestDirectory.FullName -Force -Recurse -Verbose

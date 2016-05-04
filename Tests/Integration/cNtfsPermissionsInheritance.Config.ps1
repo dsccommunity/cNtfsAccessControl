@@ -1,5 +1,7 @@
+#requires -Version 4.0
+
 $TestParameters = [PSCustomObject]@{
-    Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([System.Guid]::NewGuid().Guid))
+    Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([Guid]::NewGuid().Guid))
     Enabled = $false
     PreserveInherited = $true
 }

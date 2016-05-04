@@ -1,6 +1,8 @@
+#requires -Version 4.0
+
 $TestParameters = [PSCustomObject]@{
     Ensure = 'Present'
-    Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([System.Guid]::NewGuid().Guid))
+    Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([Guid]::NewGuid().Guid))
     Principal = 'BUILTIN\Users'
 }
 
@@ -23,7 +25,6 @@ Configuration cNtfsPermissionEntry_Config
                     Inheritance = 'ThisFolderOnly'
                     NoPropagateInherit = $false
                 }
-
                 cNtfsAccessControlInformation
                 {
                     AccessControlType = 'Allow'
@@ -31,7 +32,6 @@ Configuration cNtfsPermissionEntry_Config
                     Inheritance = 'ThisFolderSubfoldersAndFiles'
                     NoPropagateInherit = $false
                 }
-
                 cNtfsAccessControlInformation
                 {
                     AccessControlType = 'Allow'
