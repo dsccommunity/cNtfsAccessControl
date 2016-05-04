@@ -12,7 +12,7 @@ Configuration Sample_cNtfsPermissionsInheritance
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [String]
-        $Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([System.Guid]::NewGuid().Guid))
+        $Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([Guid]::NewGuid().Guid))
     )
 
     Import-DscResource -ModuleName cNtfsAccessControl

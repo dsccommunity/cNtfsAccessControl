@@ -12,7 +12,7 @@ Configuration Sample_cNtfsPermissionEntry
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [String]
-        $Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([System.Guid]::NewGuid().Guid))
+        $Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([Guid]::NewGuid().Guid))
     )
 
     Import-DscResource -ModuleName cNtfsAccessControl
@@ -52,18 +52,24 @@ Configuration Sample_cNtfsPermissionEntry
         AccessControlInformation = @(
             cNtfsAccessControlInformation
             {
+                AccessControlType = 'Allow'
                 FileSystemRights = 'Modify'
                 Inheritance = 'ThisFolderOnly'
+                NoPropagateInherit = $false
             }
             cNtfsAccessControlInformation
             {
+                AccessControlType = 'Allow'
                 FileSystemRights = 'ReadAndExecute'
                 Inheritance = 'ThisFolderSubfoldersAndFiles'
+                NoPropagateInherit = $false
             }
             cNtfsAccessControlInformation
             {
+                AccessControlType = 'Allow'
                 FileSystemRights = 'AppendData', 'CreateFiles'
                 Inheritance = 'SubfoldersAndFilesOnly'
+                NoPropagateInherit = $false
             }
         )
         DependsOn = '[File]TestDirectory'
