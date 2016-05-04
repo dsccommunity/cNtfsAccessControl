@@ -8,41 +8,14 @@ function Get-TargetResource
     [OutputType([Hashtable])]
     param
     (
-        [Parameter(Mandatory = $false)]
-        [ValidateSet('Absent', 'Present')]
-        [String]
-        $Ensure = 'Present',
-
         [Parameter(Mandatory = $true)]
         [String]
         $Path,
 
-        [Parameter(Mandatory = $false)]
-        [ValidateSet('Directory', 'File')]
-        [String]
-        $ItemType,
-
         [Parameter(Mandatory = $true)]
         [String]
-        $Principal,
-
-        [Parameter(Mandatory = $false)]
-        [Microsoft.Management.Infrastructure.CimInstance[]]
-        $AccessControlInformation
+        $Principal
     )
-
-    $PSBoundParameters.GetEnumerator() |
-    ForEach-Object -Begin {
-        $Width = $PSBoundParameters.Keys.Length | Sort-Object -Descending | Select-Object -First 1
-    } -Process {
-        "{0,-$($Width)} : '{1}'" -f $_.Key, ($_.Value -join ', ') |
-        Write-Verbose
-    }
-
-    if ($PSBoundParameters.ContainsKey('ItemType'))
-    {
-        Write-Verbose -Message 'The ItemType property is deprecated and will be ignored.'
-    }
 
     $Acl = Get-Acl -Path $Path -ErrorAction Stop
 
@@ -60,23 +33,30 @@ function Get-TargetResource
     [System.Security.AccessControl.FileSystemAccessRule[]]$AccessRules = @(
         $Acl.Access |
         Where-Object -FilterScript {
-            ($_.IsInherited -eq $false) -and ($_.IdentityReference -eq $Identity.Name)
+            ($_.IsInherited -eq $false) -and
+            ($_.IdentityReference -eq $Identity.Name)
         }
     )
 
-    Write-Verbose -Message "Current Permission Entry Count : $($AccessRules.Count)"
+    Write-Verbose -Message "Current permission entry count : $($AccessRules.Count)"
 
     $CimAccessRules = New-Object -TypeName 'System.Collections.ObjectModel.Collection`1[Microsoft.Management.Infrastructure.CimInstance]'
 
-    if ($AccessRules.Count -ne 0)
+    if ($AccessRules.Count -eq 0)
     {
+        $EnsureResult = 'Absent'
+    }
+    else
+    {
+        $EnsureResult = 'Present'
+
         $AccessRules |
         ConvertFrom-FileSystemAccessRule -ItemType $ItemType |
         ForEach-Object -Process {
 
             $CimAccessRule = New-CimInstance -ClientOnly `
-                -Namespace 'root/Microsoft/Windows/DesiredStateConfiguration' `
-                -ClassName 'cNtfsAccessControlInformation' `
+                -Namespace root/Microsoft/Windows/DesiredStateConfiguration `
+                -ClassName cNtfsAccessControlInformation `
                 -Property @{
                     AccessControlType = $_.AccessControlType
                     FileSystemRights = $_.FileSystemRights
@@ -86,119 +66,6 @@ function Get-TargetResource
 
             $CimAccessRules.Add($CimAccessRule)
 
-        }
-    }
-
-    if ($Ensure -eq 'Absent')
-    {
-        if ($AccessRules.Count -eq 0)
-        {
-            $EnsureResult = 'Absent'
-        }
-        else
-        {
-            $EnsureResult = 'Present'
-        }
-    }
-    else
-    {
-        $EnsureResult = 'Present'
-
-        [PSCustomObject[]]$PermissionEntries = @()
-
-        if ($PSBoundParameters.ContainsKey('AccessControlInformation'))
-        {
-            foreach ($Item in $AccessControlInformation)
-            {
-                $AccessControlType = $Item.CimInstanceProperties.Where({$_.Name -eq 'AccessControlType'}).ForEach({$_.Value})
-                $FileSystemRights = $Item.CimInstanceProperties.Where({$_.Name -eq 'FileSystemRights'}).ForEach({$_.Value})
-                $Inheritance = $Item.CimInstanceProperties.Where({$_.Name -eq 'Inheritance'}).ForEach({$_.Value})
-                $NoPropagateInherit = $Item.CimInstanceProperties.Where({$_.Name -eq 'NoPropagateInherit'}).ForEach({$_.Value})
-
-                if (-not $AccessControlType)
-                {
-                    $AccessControlType = 'Allow'
-                }
-
-                if (-not $FileSystemRights)
-                {
-                    $FileSystemRights = 'ReadAndExecute'
-                }
-
-                if (-not $NoPropagateInherit)
-                {
-                    $NoPropagateInherit = $false
-                }
-
-                $PermissionEntries += [PSCustomObject]@{
-                    AccessControlType = $AccessControlType
-                    FileSystemRights = $FileSystemRights
-                    Inheritance = $Inheritance
-                    NoPropagateInherit = $NoPropagateInherit
-                }
-            }
-        }
-        else
-        {
-            Write-Verbose -Message 'The AccessControlInformation property is not specified. The default permission entry will be used as the reference entry.'
-
-            $PermissionEntries += [PSCustomObject]@{
-                AccessControlType = 'Allow'
-                FileSystemRights = 'ReadAndExecute'
-                Inheritance = $null
-                NoPropagateInherit = $false
-            }
-        }
-
-        Write-Verbose -Message "Desired Permission Entry Count : $($PermissionEntries.Count)"
-
-        if ($AccessRules.Count -ne $PermissionEntries.Count)
-        {
-            Write-Verbose -Message 'The number of current permission entries is different from the number of desired permission entries.'
-            $EnsureResult = 'Absent'
-        }
-
-        foreach ($Item in $PermissionEntries)
-        {
-            $ReferenceRule = ConvertTo-FileSystemAccessRule `
-                -ItemType $ItemType `
-                -Principal $Identity.Name `
-                -AccessControlType $Item.AccessControlType `
-                -FileSystemRights $Item.FileSystemRights `
-                -Inheritance $Item.Inheritance `
-                -NoPropagateInherit $Item.NoPropagateInherit `
-                -ErrorAction Stop
-
-            $MatchingRule = $AccessRules |
-                Where-Object -FilterScript {
-                    ($_.AccessControlType -eq $ReferenceRule.AccessControlType) -and
-                    ($_.FileSystemRights -eq $ReferenceRule.FileSystemRights) -and
-                    ($_.InheritanceFlags -eq $ReferenceRule.InheritanceFlags) -and
-                    ($_.PropagationFlags -eq $ReferenceRule.PropagationFlags)
-                }
-
-            if ($MatchingRule)
-            {
-                "(FOUND) Permission Entry:",
-                "> IdentityReference : '$($MatchingRule.IdentityReference)'",
-                "> AccessControlType : '$($MatchingRule.AccessControlType)'",
-                "> FileSystemRights  : '$($MatchingRule.FileSystemRights)'",
-                "> InheritanceFlags  : '$($MatchingRule.InheritanceFlags)'",
-                "> PropagationFlags  : '$($MatchingRule.PropagationFlags)'" |
-                Write-Verbose
-            }
-            else
-            {
-                $EnsureResult = 'Absent'
-
-                "(NOT FOUND) Permission Entry:",
-                "> IdentityReference : '$($ReferenceRule.IdentityReference)'",
-                "> AccessControlType : '$($ReferenceRule.AccessControlType)'",
-                "> FileSystemRights  : '$($ReferenceRule.FileSystemRights)'",
-                "> InheritanceFlags  : '$($ReferenceRule.InheritanceFlags)'",
-                "> PropagationFlags  : '$($ReferenceRule.PropagationFlags)'" |
-                Write-Verbose
-            }
         }
     }
 
@@ -242,9 +109,211 @@ function Test-TargetResource
         $AccessControlInformation
     )
 
-    $TargetResource = Get-TargetResource @PSBoundParameters
+    $PSBoundParameters.GetEnumerator() |
+    ForEach-Object -Begin {
+        $Width = $PSBoundParameters.Keys.Length | Sort-Object | Select-Object -Last 1
+    } -Process {
+        "{0,-$($Width)} : '{1}'" -f $_.Key, ($_.Value -join ', ') |
+        Write-Verbose
+    }
 
-    $InDesiredState = $Ensure -eq $TargetResource.Ensure
+    if ($PSBoundParameters.ContainsKey('ItemType'))
+    {
+        Write-Verbose -Message 'The ItemType property is deprecated and will be ignored.'
+    }
+
+    $InDesiredState = $true
+
+    $Acl = Get-Acl -Path $Path -ErrorAction Stop
+
+    if ($Acl -is [System.Security.AccessControl.DirectorySecurity])
+    {
+        $ItemType = 'Directory'
+    }
+    else
+    {
+        $ItemType = 'File'
+    }
+
+    $Identity = Resolve-IdentityReference -Identity $Principal -ErrorAction Stop
+
+    [System.Security.AccessControl.FileSystemAccessRule[]]$AccessRules = @(
+        $Acl.Access |
+        Where-Object -FilterScript {
+            ($_.IsInherited -eq $false) -and
+            ($_.IdentityReference -eq $Identity.Name)
+        }
+    )
+
+    Write-Verbose -Message "Current permission entry count : $($AccessRules.Count)"
+
+    [PSCustomObject[]]$ReferenceRuleInfo = @()
+
+    if ($PSBoundParameters.ContainsKey('AccessControlInformation'))
+    {
+        foreach ($Instance in $AccessControlInformation)
+        {
+            $AccessControlType = $Instance.CimInstanceProperties.Where({$_.Name -eq 'AccessControlType'}).ForEach({$_.Value})
+            $FileSystemRights = $Instance.CimInstanceProperties.Where({$_.Name -eq 'FileSystemRights'}).ForEach({$_.Value})
+            $Inheritance = $Instance.CimInstanceProperties.Where({$_.Name -eq 'Inheritance'}).ForEach({$_.Value})
+            $NoPropagateInherit = $Instance.CimInstanceProperties.Where({$_.Name -eq 'NoPropagateInherit'}).ForEach({$_.Value})
+
+            if (-not $AccessControlType)
+            {
+                $AccessControlType = 'Allow'
+            }
+
+            if (-not $FileSystemRights)
+            {
+                $FileSystemRights = 'ReadAndExecute'
+            }
+
+            if (-not $NoPropagateInherit)
+            {
+                $NoPropagateInherit = $false
+            }
+
+            $ReferenceRuleInfo += [PSCustomObject]@{
+                AccessControlType = $AccessControlType
+                FileSystemRights = $FileSystemRights
+                Inheritance = $Inheritance
+                NoPropagateInherit = $NoPropagateInherit
+            }
+        }
+    }
+    else
+    {
+        Write-Verbose -Message 'The AccessControlInformation property is not specified.'
+
+        if ($Ensure -eq 'Present')
+        {
+            Write-Verbose -Message 'The default permission entry will be used as the reference permission entry.'
+
+            $ReferenceRuleInfo += [PSCustomObject]@{
+                AccessControlType = 'Allow'
+                FileSystemRights = 'ReadAndExecute'
+                Inheritance = $null
+                NoPropagateInherit = $false
+            }
+        }
+    }
+
+    if ($Ensure -eq 'Absent' -and $AccessRules.Count -ne 0)
+    {
+        if ($ReferenceRuleInfo.Count -ne 0)
+        {
+            $ReferenceRuleInfo |
+            ForEach-Object -Begin {$Counter = 0} -Process {
+
+                $Entry = $_
+
+                $ReferenceRule = New-FileSystemAccessRule `
+                    -ItemType $ItemType `
+                    -Principal $Identity.Name `
+                    -AccessControlType $Entry.AccessControlType `
+                    -FileSystemRights $Entry.FileSystemRights `
+                    -Inheritance $Entry.Inheritance `
+                    -NoPropagateInherit $Entry.NoPropagateInherit `
+                    -ErrorAction Stop
+
+                $MatchingRule = $AccessRules |
+                    Where-Object -FilterScript {
+                        ($_.AccessControlType -eq $ReferenceRule.AccessControlType) -and
+                        ($_.FileSystemRights -eq $ReferenceRule.FileSystemRights) -and
+                        ($_.InheritanceFlags -eq $ReferenceRule.InheritanceFlags) -and
+                        ($_.PropagationFlags -eq $ReferenceRule.PropagationFlags)
+                    }
+
+                if ($MatchingRule)
+                {
+                    ("Permission entry was found ({0} of {1}) :" -f (++$Counter), $ReferenceRuleInfo.Count),
+                    ("> IdentityReference : '{0}'" -f $MatchingRule.IdentityReference),
+                    ("> AccessControlType : '{0}'" -f $MatchingRule.AccessControlType),
+                    ("> FileSystemRights  : '{0}'" -f $MatchingRule.FileSystemRights),
+                    ("> InheritanceFlags  : '{0}'" -f $MatchingRule.InheritanceFlags),
+                    ("> PropagationFlags  : '{0}'" -f $MatchingRule.PropagationFlags) |
+                    Write-Verbose
+
+                    $InDesiredState = $false
+                }
+                else
+                {
+                    ("Permission entry was not found ({0} of {1}) :" -f (++$Counter), $ReferenceRuleInfo.Count),
+                    ("> IdentityReference : '{0}'" -f $ReferenceRule.IdentityReference),
+                    ("> AccessControlType : '{0}'" -f $ReferenceRule.AccessControlType),
+                    ("> FileSystemRights  : '{0}'" -f $ReferenceRule.FileSystemRights),
+                    ("> InheritanceFlags  : '{0}'" -f $ReferenceRule.InheritanceFlags),
+                    ("> PropagationFlags  : '{0}'" -f $ReferenceRule.PropagationFlags) |
+                    Write-Verbose
+                }
+
+            }
+        }
+        else
+        {
+            # All explicit permissions associated with the specified principal should be removed.
+            $InDesiredState = $false
+        }
+    }
+
+    if ($Ensure -eq 'Present')
+    {
+        Write-Verbose -Message "Desired permission entry count : $($ReferenceRuleInfo.Count)"
+
+        if ($AccessRules.Count -ne $ReferenceRuleInfo.Count)
+        {
+            Write-Verbose -Message 'The number of current permission entries is different from the number of desired permission entries.'
+
+            $InDesiredState = $false
+        }
+
+        $ReferenceRuleInfo |
+        ForEach-Object -Begin {$Counter = 0} -Process {
+
+            $Entry = $_
+
+            $ReferenceRule = New-FileSystemAccessRule `
+                -ItemType $ItemType `
+                -Principal $Identity.Name `
+                -AccessControlType $Entry.AccessControlType `
+                -FileSystemRights $Entry.FileSystemRights `
+                -Inheritance $Entry.Inheritance `
+                -NoPropagateInherit $Entry.NoPropagateInherit `
+                -ErrorAction Stop
+
+            $MatchingRule = $AccessRules |
+                Where-Object -FilterScript {
+                    ($_.AccessControlType -eq $ReferenceRule.AccessControlType) -and
+                    ($_.FileSystemRights -eq $ReferenceRule.FileSystemRights) -and
+                    ($_.InheritanceFlags -eq $ReferenceRule.InheritanceFlags) -and
+                    ($_.PropagationFlags -eq $ReferenceRule.PropagationFlags)
+                }
+
+            if ($MatchingRule)
+            {
+                ("Permission entry was found ({0} of {1}) :" -f (++$Counter), $ReferenceRuleInfo.Count),
+                ("> IdentityReference : '{0}'" -f $MatchingRule.IdentityReference),
+                ("> AccessControlType : '{0}'" -f $MatchingRule.AccessControlType),
+                ("> FileSystemRights  : '{0}'" -f $MatchingRule.FileSystemRights),
+                ("> InheritanceFlags  : '{0}'" -f $MatchingRule.InheritanceFlags),
+                ("> PropagationFlags  : '{0}'" -f $MatchingRule.PropagationFlags) |
+                Write-Verbose
+            }
+            else
+            {
+                ("Permission entry was not found ({0} of {1}) :" -f (++$Counter), $ReferenceRuleInfo.Count),
+                ("> IdentityReference : '{0}'" -f $ReferenceRule.IdentityReference),
+                ("> AccessControlType : '{0}'" -f $ReferenceRule.AccessControlType),
+                ("> FileSystemRights  : '{0}'" -f $ReferenceRule.FileSystemRights),
+                ("> InheritanceFlags  : '{0}'" -f $ReferenceRule.InheritanceFlags),
+                ("> PropagationFlags  : '{0}'" -f $ReferenceRule.PropagationFlags) |
+                Write-Verbose
+
+                $InDesiredState = $false
+            }
+
+        }
+    }
 
     if ($InDesiredState -eq $true)
     {
@@ -286,11 +355,6 @@ function Set-TargetResource
         $AccessControlInformation
     )
 
-    if ($PSBoundParameters.ContainsKey('ItemType'))
-    {
-        Write-Verbose -Message 'The ItemType property is deprecated and should not be used.'
-    }
-
     $Acl = Get-Acl -Path $Path -ErrorAction Stop
 
     if ($Acl -is [System.Security.AccessControl.DirectorySecurity])
@@ -307,80 +371,150 @@ function Set-TargetResource
     [System.Security.AccessControl.FileSystemAccessRule[]]$AccessRules = @(
         $Acl.Access |
         Where-Object -FilterScript {
-            ($_.IsInherited -eq $false) -and ($_.IdentityReference -eq $Identity.Name)
+            ($_.IsInherited -eq $false) -and
+            ($_.IdentityReference -eq $Identity.Name)
         }
     )
 
-    if ($AccessRules.Count -ne 0)
+    Write-Verbose -Message "Current permission entry count : $($AccessRules.Count)"
+
+    [PSCustomObject[]]$ReferenceRuleInfo = @()
+
+    if ($PSBoundParameters.ContainsKey('AccessControlInformation'))
     {
-        "Removing all explicit permissions for principal '{0}' on path '{1}'." -f $($AccessRules[0].IdentityReference), $Path |
-        Write-Verbose
-
-        $Modified = $null
-        $Acl.ModifyAccessRule('RemoveAll', $AccessRules[0], [Ref]$Modified)
-    }
-
-    if ($Ensure -eq 'Present')
-    {
-        [PSCustomObject[]]$PermissionEntries = @()
-
-        if ($PSBoundParameters.ContainsKey('AccessControlInformation'))
+        foreach ($Instance in $AccessControlInformation)
         {
-            foreach ($Item in $AccessControlInformation)
+            $AccessControlType = $Instance.CimInstanceProperties.Where({$_.Name -eq 'AccessControlType'}).ForEach({$_.Value})
+            $FileSystemRights = $Instance.CimInstanceProperties.Where({$_.Name -eq 'FileSystemRights'}).ForEach({$_.Value})
+            $Inheritance = $Instance.CimInstanceProperties.Where({$_.Name -eq 'Inheritance'}).ForEach({$_.Value})
+            $NoPropagateInherit = $Instance.CimInstanceProperties.Where({$_.Name -eq 'NoPropagateInherit'}).ForEach({$_.Value})
+
+            if (-not $AccessControlType)
             {
-                $AccessControlType = $Item.CimInstanceProperties.Where({$_.Name -eq 'AccessControlType'}).ForEach({$_.Value})
-                $FileSystemRights = $Item.CimInstanceProperties.Where({$_.Name -eq 'FileSystemRights'}).ForEach({$_.Value})
-                $Inheritance = $Item.CimInstanceProperties.Where({$_.Name -eq 'Inheritance'}).ForEach({$_.Value})
-                $NoPropagateInherit = $Item.CimInstanceProperties.Where({$_.Name -eq 'NoPropagateInherit'}).ForEach({$_.Value})
+                $AccessControlType = 'Allow'
+            }
 
-                if (-not $AccessControlType)
-                {
-                    $AccessControlType = 'Allow'
-                }
+            if (-not $FileSystemRights)
+            {
+                $FileSystemRights = 'ReadAndExecute'
+            }
 
-                if (-not $FileSystemRights)
-                {
-                    $FileSystemRights = 'ReadAndExecute'
-                }
+            if (-not $NoPropagateInherit)
+            {
+                $NoPropagateInherit = $false
+            }
 
-                if (-not $NoPropagateInherit)
-                {
-                    $NoPropagateInherit = $false
-                }
-
-                $PermissionEntries += [PSCustomObject]@{
-                    AccessControlType = $AccessControlType
-                    FileSystemRights = $FileSystemRights
-                    Inheritance = $Inheritance
-                    NoPropagateInherit = $NoPropagateInherit
-                }
+            $ReferenceRuleInfo += [PSCustomObject]@{
+                AccessControlType = $AccessControlType
+                FileSystemRights = $FileSystemRights
+                Inheritance = $Inheritance
+                NoPropagateInherit = $NoPropagateInherit
             }
         }
-        else
+    }
+    else
+    {
+        Write-Verbose -Message 'The AccessControlInformation property is not specified.'
+
+        if ($Ensure -eq 'Present')
         {
-            $PermissionEntries += [PSCustomObject]@{
+            Write-Verbose -Message 'The default permission entry will be added.'
+
+            $ReferenceRuleInfo += [PSCustomObject]@{
                 AccessControlType = 'Allow'
                 FileSystemRights = 'ReadAndExecute'
                 Inheritance = $null
                 NoPropagateInherit = $false
             }
         }
+    }
 
-        foreach ($Item in $PermissionEntries)
+    if ($Ensure -eq 'Absent' -and $AccessRules.Count -ne 0)
+    {
+        if ($ReferenceRuleInfo.Count -ne 0)
         {
-            $ReferenceRule = ConvertTo-FileSystemAccessRule `
+            $ReferenceRuleInfo |
+            ForEach-Object -Begin {$Counter = 0} -Process {
+
+                $Entry = $_
+
+                $ReferenceRule = New-FileSystemAccessRule `
+                    -ItemType $ItemType `
+                    -Principal $Identity.Name `
+                    -AccessControlType $Entry.AccessControlType `
+                    -FileSystemRights $Entry.FileSystemRights `
+                    -Inheritance $Entry.Inheritance `
+                    -NoPropagateInherit $Entry.NoPropagateInherit `
+                    -ErrorAction Stop
+
+                $MatchingRule = $AccessRules |
+                    Where-Object -FilterScript {
+                        ($_.AccessControlType -eq $ReferenceRule.AccessControlType) -and
+                        ($_.FileSystemRights -eq $ReferenceRule.FileSystemRights) -and
+                        ($_.InheritanceFlags -eq $ReferenceRule.InheritanceFlags) -and
+                        ($_.PropagationFlags -eq $ReferenceRule.PropagationFlags)
+                    }
+
+                if ($MatchingRule)
+                {
+                    ("Removing permission entry ({0} of {1}) :" -f (++$Counter), $ReferenceRuleInfo.Count),
+                    ("> IdentityReference : '{0}'" -f $MatchingRule.IdentityReference),
+                    ("> AccessControlType : '{0}'" -f $MatchingRule.AccessControlType),
+                    ("> FileSystemRights  : '{0}'" -f $MatchingRule.FileSystemRights),
+                    ("> InheritanceFlags  : '{0}'" -f $MatchingRule.InheritanceFlags),
+                    ("> PropagationFlags  : '{0}'" -f $MatchingRule.PropagationFlags) |
+                    Write-Verbose
+
+                    $Modified = $null
+                    $Acl.ModifyAccessRule('RemoveSpecific', $MatchingRule, [Ref]$Modified)
+                }
+            }
+        }
+        else
+        {
+            "Removing all explicit permissions for principal '{0}'." -f $($AccessRules[0].IdentityReference) |
+            Write-Verbose
+
+            $Modified = $null
+            $Acl.ModifyAccessRule('RemoveAll', $AccessRules[0], [Ref]$Modified)
+        }
+    }
+
+    if ($Ensure -eq 'Present')
+    {
+        if ($AccessRules.Count -ne 0)
+        {
+            "Removing all explicit permissions for principal '{0}'." -f $($AccessRules[0].IdentityReference) |
+            Write-Verbose
+
+            $Modified = $null
+            $Acl.ModifyAccessRule('RemoveAll', $AccessRules[0], [Ref]$Modified)
+        }
+
+        $ReferenceRuleInfo |
+        ForEach-Object -Begin {$Counter = 0} -Process {
+
+            $Entry = $_
+
+            $ReferenceRule = New-FileSystemAccessRule `
                 -ItemType $ItemType `
                 -Principal $Identity.Name `
-                -AccessControlType $Item.AccessControlType `
-                -FileSystemRights $Item.FileSystemRights `
-                -Inheritance $Item.Inheritance `
-                -NoPropagateInherit $Item.NoPropagateInherit `
+                -AccessControlType $Entry.AccessControlType `
+                -FileSystemRights $Entry.FileSystemRights `
+                -Inheritance $Entry.Inheritance `
+                -NoPropagateInherit $Entry.NoPropagateInherit `
                 -ErrorAction Stop
 
-            "Adding permission entry for principal '{0}' on path '{1}'." -f $Identity.Name, $Path |
+            ("Adding permission entry ({0} of {1}) :" -f (++$Counter), $ReferenceRuleInfo.Count),
+            ("> IdentityReference : '{0}'" -f $ReferenceRule.IdentityReference),
+            ("> AccessControlType : '{0}'" -f $ReferenceRule.AccessControlType),
+            ("> FileSystemRights  : '{0}'" -f $ReferenceRule.FileSystemRights),
+            ("> InheritanceFlags  : '{0}'" -f $ReferenceRule.InheritanceFlags),
+            ("> PropagationFlags  : '{0}'" -f $ReferenceRule.PropagationFlags) |
             Write-Verbose
 
             $Acl.AddAccessRule($ReferenceRule)
+
         }
     }
 
@@ -391,6 +525,19 @@ function Set-TargetResource
 
 function ConvertFrom-FileSystemAccessRule
 {
+    <#
+    .SYNOPSIS
+        Converts a FileSystemAccessRule object to a custom object.
+
+    .DESCRIPTION
+        The ConvertFrom-FileSystemAccessRule function converts a FileSystemAccessRule object to a custom object.
+
+    .PARAMETER ItemType
+        Specifies whether the item is a directory or a file.
+
+    .PARAMETER InputObject
+        Specifies the FileSystemAccessRule object to convert.
+    #>
     [CmdletBinding()]
     param
     (
@@ -412,7 +559,8 @@ function ConvertFrom-FileSystemAccessRule
 
         if ($NoPropagateInherit)
         {
-            [System.Security.AccessControl.PropagationFlags]$PropagationFlags = $PropagationFlags -bxor [System.Security.AccessControl.PropagationFlags]::NoPropagateInherit
+            [System.Security.AccessControl.PropagationFlags]$PropagationFlags =
+                $PropagationFlags -bxor [System.Security.AccessControl.PropagationFlags]::NoPropagateInherit
         }
 
         if ($InheritanceFlags -eq 'None' -and $PropagationFlags -eq 'None')
@@ -464,8 +612,34 @@ function ConvertFrom-FileSystemAccessRule
     }
 }
 
-function ConvertTo-FileSystemAccessRule
+function New-FileSystemAccessRule
 {
+    <#
+    .SYNOPSIS
+        Creates a FileSystemAccessRule object.
+
+    .DESCRIPTION
+        The New-FileSystemAccessRule function creates a FileSystemAccessRule object
+        that represents an abstraction of an access control entry (ACE).
+
+    .PARAMETER ItemType
+        Specifies whether the item is a directory or a file.
+
+    .PARAMETER Principal
+        Specifies the identity of the principal.
+
+    .PARAMETER AccessControlType
+        Specifies whether the ACE to be used to allow or deny access.
+
+    .PARAMETER FileSystemRights
+        Specifies the access rights to be granted to the principal.
+
+    .PARAMETER Inheritance
+        Specifies the inheritance type of the ACE.
+
+    .PARAMETER NoPropagateInherit
+        Specifies that the ACE is not propagated to child objects.
+    #>
     [CmdletBinding()]
     [OutputType([System.Security.AccessControl.FileSystemAccessRule])]
     param
@@ -573,9 +747,8 @@ function ConvertTo-FileSystemAccessRule
             [System.Security.AccessControl.PropagationFlags]$PropagationFlags = 'None'
         }
 
-        $OutputObject = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList @(
-            $Principal, $FileSystemRights, $InheritanceFlags, $PropagationFlags, $AccessControlType
-        )
+        $OutputObject = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule `
+            -ArgumentList $Principal, $FileSystemRights, $InheritanceFlags, $PropagationFlags, $AccessControlType
 
         return $OutputObject
     }
@@ -583,6 +756,20 @@ function ConvertTo-FileSystemAccessRule
 
 function Set-FileSystemAccessControl
 {
+    <#
+    .SYNOPSIS
+        Applies access control entries (ACEs) to the specified file or directory.
+
+    .DESCRIPTION
+        The Set-FileSystemAccessControl function applies access control entries (ACEs) to the specified file or directory.
+
+    .PARAMETER Path
+        Specifies the path to the file or directory.
+
+    .PARAMETER Acl
+        Specifies the access control list (ACL) object with the desired access control entries (ACEs)
+        to apply to the file or directory described by the Path parameter.
+    #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param
     (
@@ -614,6 +801,17 @@ function Set-FileSystemAccessControl
 
 function Resolve-IdentityReference
 {
+    <#
+    .SYNOPSIS
+        Resolves the identity of the principal.
+
+    .DESCRIPTION
+        The Resolve-IdentityReference function resolves the identity of the principal
+        and returns its down-level logon name and security identifier (SID).
+
+    .PARAMETER Identity
+        Specifies the identity of the principal.
+    #>
     [CmdletBinding()]
     param
     (

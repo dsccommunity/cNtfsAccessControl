@@ -23,7 +23,7 @@ function Get-TargetResource
 
     $PSBoundParameters.GetEnumerator() |
     ForEach-Object -Begin {
-        $Width = $PSBoundParameters.Keys.Length | Sort-Object -Descending | Select-Object -First 1
+        $Width = $PSBoundParameters.Keys.Length | Sort-Object | Select-Object -Last 1
     } -Process {
         "{0,-$($Width)} : '{1}'" -f $_.Key, ($_.Value -join ', ') |
         Write-Verbose
@@ -135,6 +135,20 @@ function Set-TargetResource
 
 function Set-FileSystemAccessControl
 {
+    <#
+    .SYNOPSIS
+        Applies access control entries (ACEs) to the specified file or directory.
+
+    .DESCRIPTION
+        The Set-FileSystemAccessControl function applies access control entries (ACEs) to the specified file or directory.
+
+    .PARAMETER Path
+        Specifies the path to the file or directory.
+
+    .PARAMETER Acl
+        Specifies the access control list (ACL) object with the desired access control entries (ACEs)
+        to apply to the file or directory described by the Path parameter.
+    #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param
     (

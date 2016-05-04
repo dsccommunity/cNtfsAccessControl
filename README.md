@@ -12,9 +12,10 @@ You can also download this module from the [PowerShell Gallery](https://www.powe
 
 The **cNtfsPermissionEntry** DSC resource provides a mechanism to manage NTFS permissions.
 
-* **Ensure**: Indicates if the principal has explicitly assigned permissions on the target path.
+* **Ensure**: Indicates if the principal has explicitly assigned NTFS permissions on the target path.
     Set this property to `Present` (the default value) to ensure they exactly match what is provided through the **AccessControlInformation** property.
-    Set this property to `Absent` to ensure that all explicit permissions associated with the specified principal are removed.
+    If the **AccessControlInformation** property is not specified, the default permission entry is used as the reference permission entry.
+    If this property is set to `Absent` and the **AccessControlInformation** property is not specified, all explicit permissions associated with the specified principal are removed.
 * **Path**: Indicates the path to the target item.
 * **Principal**: Indicates the identity of the principal. Valid formats are:
     * [Down-Level Logon Name](https://msdn.microsoft.com/en-us/library/windows/desktop/aa380525%28v=vs.85%29.aspx#down_level_logon_name)
@@ -45,9 +46,14 @@ The **cNtfsPermissionsInheritance** DSC resource provides a mechanism to manage 
 * **Path**: Indicates the path to the target item.
 * **Enabled**: Indicates whether NTFS permissions inheritance is enabled. Set this property to `$false` to ensure it is disabled. The default value is `$true`.
 * **PreserveInherited**: Indicates whether to preserve inherited permissions. Set this property to `$true` to convert inherited permissions into explicit permissions.
-    The default value is `$false`. This property is only valid when the **Enabled** property is set to `$false`.
+    The default value is `$false`. **Note:** This property is only valid when the **Enabled** property is set to `$false`.
 
 ## Versions
+
+### 1.3.0 (May 04, 2016)
+
+* Changed the behavior of the **cNtfsPermissionEntry** DSC resource with the **Ensure** property set to `Absent`. Added an ability to remove specific permission entries.
+* General improvements.
 
 ### 1.2.0 (February 19, 2016)
 
@@ -84,7 +90,7 @@ Configuration Sample_cNtfsPermissionEntry
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [String]
-        $Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([System.Guid]::NewGuid().Guid))
+        $Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([Guid]::NewGuid().Guid))
     )
 
     Import-DscResource -ModuleName cNtfsAccessControl
@@ -124,18 +130,24 @@ Configuration Sample_cNtfsPermissionEntry
         AccessControlInformation = @(
             cNtfsAccessControlInformation
             {
+                AccessControlType = 'Allow'
                 FileSystemRights = 'Modify'
                 Inheritance = 'ThisFolderOnly'
+                NoPropagateInherit = $false
             }
             cNtfsAccessControlInformation
             {
+                AccessControlType = 'Allow'
                 FileSystemRights = 'ReadAndExecute'
                 Inheritance = 'ThisFolderSubfoldersAndFiles'
+                NoPropagateInherit = $false
             }
             cNtfsAccessControlInformation
             {
+                AccessControlType = 'Allow'
                 FileSystemRights = 'AppendData', 'CreateFiles'
                 Inheritance = 'SubfoldersAndFilesOnly'
+                NoPropagateInherit = $false
             }
         )
         DependsOn = '[File]TestDirectory'
@@ -170,7 +182,7 @@ Configuration Sample_cNtfsPermissionsInheritance
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [String]
-        $Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([System.Guid]::NewGuid().Guid))
+        $Path = (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([Guid]::NewGuid().Guid))
     )
 
     Import-DscResource -ModuleName cNtfsAccessControl
