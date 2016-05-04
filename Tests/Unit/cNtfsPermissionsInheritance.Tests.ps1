@@ -1,6 +1,6 @@
 #requires -Version 4.0 -Modules Pester
 
-$Global:DSCModuleName = 'cNtfsAccessControl'
+$Global:DSCModuleName   = 'cNtfsAccessControl'
 $Global:DSCResourceName = 'cNtfsPermissionsInheritance'
 
 #region Header
@@ -14,18 +14,16 @@ if (
 {
     & git @('clone', 'https://github.com/PowerShell/DscResource.Tests.git', (Join-Path -Path $ModuleRoot -ChildPath 'DSCResource.Tests'))
 }
-else
-{
-    & git @('-C', (Join-Path -Path $ModuleRoot -ChildPath 'DSCResource.Tests'), 'pull')
-}
 
 Import-Module -Name (Join-Path -Path $ModuleRoot -ChildPath 'DSCResource.Tests\TestHelper.psm1') -Force
 
-$TestEnvironment = Initialize-TestEnvironment -DSCModuleName $Global:DSCModuleName -DSCResourceName $Global:DSCResourceName -TestType Unit
+$TestEnvironment = Initialize-TestEnvironment `
+    -DSCModuleName $Global:DSCModuleName `
+    -DSCResourceName $Global:DSCResourceName `
+    -TestType Unit
 
 #endregion
 
-# Begin Testing
 try
 {
     #region Unit Tests
@@ -37,8 +35,9 @@ try
         function Set-NewTempFileAclInheritance
         {
             <#
-            .SYNOPSYS
+            .SYNOPSIS
                 Creates temporary files for unit testing of the cNtfsPermissionsInheritance DSC resource.
+
             .DESCRIPTION
                 The Set-NewTempFileAclInheritance function creates temporary files and performs the following actions on them:
                 - Grants Full Control permission to the calling user to ensure the file can be removed later.
@@ -76,7 +75,17 @@ try
                 }
 
                 $CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-                $Acl.AddAccessRule((New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $CurrentUser, 'FullControl', 'Allow'))
+
+                $AccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule `
+                    -ArgumentList @(
+                        $CurrentUser,
+                        'FullControl',
+                        'None',
+                        'None',
+                        'Allow'
+                    )
+
+                $Acl.AddAccessRule($AccessRule)
 
                 [System.IO.File]::SetAccessControl($File.FullName, $Acl)
 
@@ -184,6 +193,7 @@ try
                     Test-TargetResource -Path $Path -Enabled $false | Should Be $true
 
                     $DaclAfterSet = $File.GetAccessControl().Access
+
                     ($DaclBeforeSet.Count - $DaclAfterSet.Count) -le 1 | Should Be $true
 
                 }
@@ -204,6 +214,7 @@ try
                     Test-TargetResource -Path $Path -Enabled $false | Should Be $true
 
                     $DaclAfterSet = $File.GetAccessControl().Access
+
                     $DaclBeforeSet.Count -gt 1 | Should Be $true
                     $DaclAfterSet.Count -eq 1 | Should Be $true
 
@@ -218,7 +229,17 @@ try
             $Path = 'TestDrive:\' + [System.IO.Path]::GetRandomFileName()
             $File = New-Item -Path $Path -ItemType File
             $Acl = $File.GetAccessControl()
-            $Acl.AddAccessRule((New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList 'BUILTIN\Users', 'FullControl', 'Allow'))
+
+            $AccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule `
+                -ArgumentList @(
+                    'BUILTIN\Users',
+                    'FullControl',
+                    'None',
+                    'None',
+                    'Allow'
+                )
+
+            $Acl.AddAccessRule($AccessRule)
 
             It 'Should not throw' {
                 {Set-FileSystemAccessControl -Path $Path -Acl $Acl} | Should Not Throw
