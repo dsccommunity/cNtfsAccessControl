@@ -50,6 +50,10 @@ The **cNtfsPermissionsInheritance** DSC resource provides a mechanism to manage 
 
 ## Versions
 
+### 1.3.1 (January 10, 2018)
+
+* Bug fixes.
+
 ### 1.3.0 (May 04, 2016)
 
 * Changed the behavior of the **cNtfsPermissionEntry** DSC resource with the **Ensure** property set to `Absent`. Added an ability to remove specific permission entries.
