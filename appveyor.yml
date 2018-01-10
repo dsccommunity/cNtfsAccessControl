@@ -2,7 +2,7 @@
 #      environment configuration  #
 #---------------------------------#
 
-os: WMF 5
+image: WMF 5
 version: 1.3.1.{build}
 install:
     - git clone https://github.com/PowerShell/DscResource.Tests
@@ -24,17 +24,11 @@ build: false
 test_script:
     - ps: |
         $TestResultsFilePath = Join-Path -Path $PWD -ChildPath 'TestsResults.xml'
-
         Set-Location -Path '.\Tests'
-
         $TestResults = Invoke-Pester -OutputFormat NUnitXml -OutputFile $TestResultsFilePath -PassThru
-
+        $JobUrl = "https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)"
         $WebClient = New-Object -TypeName System.Net.WebClient
-        $WebClient.UploadFile(
-            "https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)",
-            $TestResultsFilePath
-        )
-
+        $WebClient.UploadFile($JobUrl, $TestResultsFilePath)
         if ($TestResults.FailedCount -gt 0) {throw "$($TestResults.FailedCount) tests failed."}
 
 #---------------------------------#
