@@ -47,10 +47,10 @@ try
 
         $ConfigurationName = "$($Global:DSCResourceName)_Config"
 
-        It 'Should compile without throwing' {
+        It 'Should be able to compile and apply without throwing' {
             {
-                Invoke-Expression -Command ('{0} -OutputPath "{1}"' -f $ConfigurationName, $TestEnvironment.WorkingFolder)
-                Start-DscConfiguration -Path $TestEnvironment.WorkingFolder -ComputerName localhost -Force -Verbose -Wait
+                Invoke-Expression -Command ('{0} -OutputPath "{1}"' -f $ConfigurationName, $TestDrive)
+                Start-DscConfiguration -Path $TestDrive -ComputerName localhost -Force -Verbose -Wait
             } | Should Not Throw
         }
 
