@@ -1,4 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/olfva3iu8lcehhf1?svg=true)](https://ci.appveyor.com/project/SNikalaichyk/cNtfsAccessControl)
+[![Build status](https://ci.appveyor.com/api/projects/status/n85apemxexxbcut5/branch/master?svg=true)](https://ci.appveyor.com/project/SNikalaichyk/cNtfsAccessControl/branch/master)
 
 # cNtfsAccessControl
 
