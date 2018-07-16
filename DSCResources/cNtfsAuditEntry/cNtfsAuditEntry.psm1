@@ -421,7 +421,7 @@ function Set-TargetResource
             Write-Verbose -Message 'The default permission entry will be added.'
 
             $ReferenceRuleInfo += [PSCustomObject]@{
-                AccessControlType = 'Failure'
+                AuditFlags = 'Failure'
                 FileSystemRights = 'ReadAndExecute'
                 Inheritance = $null
                 NoPropagateInherit = $false
