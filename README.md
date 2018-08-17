@@ -50,6 +50,12 @@ The **cNtfsPermissionsInheritance** DSC resource provides a mechanism to manage 
 
 ## Versions
 
+### Unreleased
+
+* Added new resources: 
+    * cNtfsAuditEntry
+    * cNtfsAuditInheritance
+
 ### 1.3.1 (January 16, 2018)
 
 * Bug fixes.
