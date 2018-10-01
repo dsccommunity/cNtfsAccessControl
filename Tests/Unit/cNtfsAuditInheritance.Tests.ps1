@@ -187,7 +187,7 @@ try
                 It 'Should disable inheritance and convert inherited permissions into explicit permissions' {
 
                     $DaclBeforeSet = (Get-Acl -Path $File.FullName -Audit).Audit
-                    
+
 
                     Test-TargetResource -Path $Path -Enabled $false | Should Be $false
                     Set-TargetResource -Path $Path -Enabled $false -PreserveInherited $true

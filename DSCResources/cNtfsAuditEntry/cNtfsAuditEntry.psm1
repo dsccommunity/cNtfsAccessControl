@@ -764,7 +764,7 @@ function New-FileSystemAuditRule
             'All' {
                 $Flags = @([System.Security.AccessControl.AuditFlags]::Success,[System.Security.AccessControl.AuditFlags]::Failure)
             }
-            
+
         }
 
         $OutputObject = New-Object -TypeName System.Security.AccessControl.FileSystemAuditRule `
