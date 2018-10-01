@@ -1,86 +1,24 @@
-#---------------------------------#
-#      environment configuration  #
-#---------------------------------#
+---
 
-image: WMF 5
+image: Visual Studio 2017
+
 version: 1.4.0.{build}
-install:
-    - git clone https://github.com/PowerShell/DscResource.Tests
-    - ps: |
-        Install-PackageProvider -Name NuGet -Force
-        Install-Module -Name Pester -Repository PSGallery -Force
-        Import-Module -Name .\DscResource.Tests\TestHelper.psm1 -Force
 
-#---------------------------------#
-#      build configuration        #
-#---------------------------------#
+install:
+  - ps: |
+      Install-PackageProvider -Name NuGet -Force
+      Install-Module -Name Pester -Repository PSGallery -Force
 
 build: false
 
-#---------------------------------#
-#      test configuration         #
-#---------------------------------#
-
 test_script:
-    - ps: |
-        $TestResultsFilePath = Join-Path -Path $PWD -ChildPath 'TestsResults.xml'
-        Push-Location
-        Set-Location -Path '.\Tests'
-        $TestResults = Invoke-Pester -OutputFormat NUnitXml -OutputFile $TestResultsFilePath -PassThru
-        Pop-Location
-        $JobUrl = "https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)"
-        $WebClient = New-Object -TypeName System.Net.WebClient
-        $WebClient.UploadFile($JobUrl, $TestResultsFilePath)
-        if ($TestResults.FailedCount -gt 0) {throw "$($TestResults.FailedCount) tests failed."}
-
-#---------------------------------#
-#      deployment configuration   #
-#---------------------------------#
-
-deploy_script:
-    - ps: |
-        $ManifestFileName = 'cNtfsAccessControl.psd1'
-        $ManifestFilePath = Join-Path -Path $PWD -ChildPath $ManifestFileName
-        $StagingDirectoryPath = (Resolve-Path -Path '..').Path
-
-        # Replace module version in the manifest file
-        (Get-Content -Path $ManifestFilePath) -replace
-            "(ModuleVersion\s*?=\s*?['|`"])(.*?)(['|`"])",
-            ('${1}' + $env:APPVEYOR_BUILD_VERSION + '${3}') |
-        Set-Content -Path $ManifestFilePath
-
-        # Load module manifest
-        $Manifest = Invoke-Expression -Command (Get-Content -Path $ManifestFilePath | Out-String)
-
-        # Create project artifact
-        $ZipFilePath = Join-Path -Path $StagingDirectoryPath -ChildPath "$(Split-Path -Path $PWD -Leaf).zip"
-        Add-Type -AssemblyName System.IO.Compression.FileSystem
-        [System.IO.Compression.ZipFile]::CreateFromDirectory($PWD, $ZipFilePath)
-
-        # Create NuGet package artifact
-        $NuspecSplat = @{
-            packageName        = $env:APPVEYOR_PROJECT_NAME
-            version            = $env:APPVEYOR_BUILD_VERSION
-            author             = $Manifest.Author
-            owners             = $Manifest.Author
-            licenseUrl         = $Manifest.PrivateData.PSData.LicenseUri
-            projectUrl         = $Manifest.PrivateData.PSData.ProjectUri
-            packageDescription = $env:APPVEYOR_PROJECT_NAME
-            tags               = (($Manifest.PrivateData.PSData.Tags) -join ' ')
-            destinationPath    = '.'
-        }
-
-        New-Nuspec @NuspecSplat
-        nuget pack ".\$($env:APPVEYOR_PROJECT_NAME).nuspec" -OutputDirectory '.'
-        $NuGetPackageName = "$($env:APPVEYOR_PROJECT_NAME).$($env:APPVEYOR_BUILD_VERSION).nupkg"
-        $NuGetPackagePath = (Get-Item -Path $NuGetPackageName).FullName
-
-        # Push artifacts
-        @(
-            $ZipFilePath
-            $NuGetPackagePath
-        ) |
-        ForEach-Object -Process {
-            Write-Verbose -Message "Pushing package '$($_)' to AppVeyor artifacts." -Verbose
-            Push-AppVeyorArtifact -Path $_
-        }
+  - ps: |
+      $testResultsFilePath = Join-Path -Path $PWD -ChildPath 'TestsResults.xml'
+      Push-Location
+      Set-Location -Path '.\Tests'
+      $testResults = Invoke-Pester -OutputFormat NUnitXml -OutputFile $testResultsFilePath -PassThru
+      Pop-Location
+      $jobUrl = "https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)"
+      $webClient = New-Object -TypeName System.Net.WebClient
+      $webClient.UploadFile($jobUrl, $testResultsFilePath)
+      if ($testResults.FailedCount -gt 0) {throw "$($testResults.FailedCount) tests failed."}
