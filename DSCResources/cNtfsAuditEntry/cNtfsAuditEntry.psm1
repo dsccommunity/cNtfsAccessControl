@@ -156,7 +156,7 @@ function Test-TargetResource
             $AuditFlags = $Instance.CimInstanceProperties.Where({$_.Name -eq 'AuditFlags'}).ForEach({$_.Value})
             $FileSystemRights = $Instance.CimInstanceProperties.Where({$_.Name -eq 'FileSystemRights'}).ForEach({$_.Value})
             $Inheritance = $Instance.CimInstanceProperties.Where({$_.Name -eq 'Inheritance'}).ForEach({$_.Value})
-            $NoPropagateInherit = $Instance.CimInstanceProperties.Where({$_.Name -eq 'NoPropagateInherit'}).ForEach({$_.Value})
+            $NoPropagateInherit = [boolean]$Instance.CimInstanceProperties.Where({$_.Name -eq 'NoPropagateInherit'}).ForEach({$_.Value})
 
             if (-not $AuditFlags)
             {
@@ -387,7 +387,7 @@ function Set-TargetResource
             $AuditFlags = $Instance.CimInstanceProperties.Where({$_.Name -eq 'AuditFlags'}).ForEach({$_.Value})
             $FileSystemRights = $Instance.CimInstanceProperties.Where({$_.Name -eq 'FileSystemRights'}).ForEach({$_.Value})
             $Inheritance = $Instance.CimInstanceProperties.Where({$_.Name -eq 'Inheritance'}).ForEach({$_.Value})
-            $NoPropagateInherit = $Instance.CimInstanceProperties.Where({$_.Name -eq 'NoPropagateInherit'}).ForEach({$_.Value})
+            $NoPropagateInherit = [boolean]$Instance.CimInstanceProperties.Where({$_.Name -eq 'NoPropagateInherit'}).ForEach({$_.Value})
 
             if (-not $AuditFlags)
             {
