@@ -54,7 +54,7 @@ The **cNtfsPermissionsInheritance** DSC resource provides a mechanism to manage 
 
 ### 1.4.1 (February 6, 2019)
 
-* **cNtfsAuditRuleInformation**: Fixed an error when **NoPropagateInherit** is set to `$true` ([#14](https://github.com/SNikalaichyk/cNtfsAccessControl#14)).
+* **cNtfsAuditRuleInformation**: Fixed an error when **NoPropagateInherit** is set to `$true` ([#14](https://github.com/SNikalaichyk/cNtfsAccessControl/pull/14)).
 
 ### 1.4.0 (October 1, 2018)
 
