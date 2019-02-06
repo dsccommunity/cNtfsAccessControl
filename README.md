@@ -6,6 +6,8 @@ The **cNtfsAccessControl** module contains DSC resources for NTFS access control
 
 You can also download this module from the [PowerShell Gallery](https://www.powershellgallery.com/packages/cNtfsAccessControl/).
 
+_This project is no longer actively maintained._
+
 ## Resources
 
 ### cNtfsPermissionEntry
@@ -50,9 +52,9 @@ The **cNtfsPermissionsInheritance** DSC resource provides a mechanism to manage 
 
 ## Versions
 
-### 1.4.1 (December 5, 2018)
+### 1.4.1 (February 6, 2019)
 
-* **cNtfsAuditRuleInformation**: Fixed an error when **NoPropagateInherit** is set to `$true` (#14).
+* **cNtfsAuditRuleInformation**: Fixed an error when **NoPropagateInherit** is set to `$true` ([#14](https://github.com/SNikalaichyk/cNtfsAccessControl#14)).
 
 ### 1.4.0 (October 1, 2018)
 
