@@ -738,7 +738,14 @@ function New-FileSystemAccessRule
 
             if ($NoPropagateInherit -eq $true -and $InheritanceFlags -ne 'None')
             {
-                [System.Security.AccessControl.PropagationFlags]$PropagationFlags = 'NoPropagateInherit'
+                if ($PropagationFlags -eq 'None')
+                {
+                    [System.Security.AccessControl.PropagationFlags]$PropagationFlags = 'NoPropagateInherit'
+                }
+                else
+                {
+                    [System.Security.AccessControl.PropagationFlags]$PropagationFlags = 'NoPropagateInherit', 'InheritOnly'
+                }
             }
         }
         else
